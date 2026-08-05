@@ -1,4 +1,4 @@
-// DeceMSG - Frontend Application
+// DeceMSG - Frontend Application - Phase 2
 
 class DeceMSGApp {
     constructor() {
@@ -9,6 +9,11 @@ class DeceMSGApp {
         this.currentChat = null;
         this.ws = null;
         this.searchResults = [];
+        this.onlineUsers = {};
+        this.typingUsers = {};
+        this.selectedFile = null;
+        this.selectedMessage = null;
+        this.pendingMembers = [];
         
         this.init();
     }
@@ -52,6 +57,24 @@ class DeceMSGApp {
                 e.preventDefault();
                 this.sendMessage();
             }
+        });
+
+        // Typing indicator
+        document.getElementById('message-input').addEventListener('input', () => {
+            this.sendTypingIndicator(true);
+        });
+
+        // File attachment
+        document.getElementById('btn-attach').addEventListener('click', () => {
+            document.getElementById('file-input').click();
+        });
+
+        document.getElementById('file-input').addEventListener('change', (e) => {
+            this.handleFileSelect(e);
+        });
+
+        document.getElementById('btn-remove-file').addEventListener('click', () => {
+            this.removeSelectedFile();
         });
 
         // Search chats
@@ -121,6 +144,52 @@ class DeceMSGApp {
         document.getElementById('btn-back').addEventListener('click', () => {
             document.getElementById('sidebar').classList.remove('hidden');
             document.getElementById('chat-content').classList.add('hidden');
+        });
+
+        // Chat info
+        document.getElementById('btn-chat-info').addEventListener('click', () => {
+            this.toggleChatInfoPanel();
+        });
+
+        document.getElementById('btn-close-chat-info').addEventListener('click', () => {
+            this.toggleChatInfoPanel();
+        });
+
+        // Keep history toggle
+        document.getElementById('keep-history-toggle').addEventListener('change', (e) => {
+            this.updateChatSetting('keep_history', e.target.checked);
+        });
+
+        // Leave group
+        document.getElementById('btn-leave-group').addEventListener('click', () => {
+            this.leaveGroup();
+        });
+
+        // Reaction picker
+        document.querySelectorAll('.reaction-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.addReaction(e.target.dataset.emoji);
+            });
+        });
+
+        // Close reaction picker on click outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.reaction-picker') && !e.target.closest('.message')) {
+                this.hideReactionPicker();
+            }
+        });
+
+        // Add member to group
+        document.getElementById('btn-add-member').addEventListener('click', () => {
+            this.showAddMemberModal();
+        });
+
+        document.getElementById('btn-close-add-member').addEventListener('click', () => {
+            this.hideAddMemberModal();
+        });
+
+        document.getElementById('btn-search-member').addEventListener('click', () => {
+            this.searchMember();
         });
     }
 
@@ -292,12 +361,39 @@ class DeceMSGApp {
 
     handleNewMessage(message, chatId) {
         if (this.currentChat && this.currentChat.id === chatId) {
+            // Add message to current chat
             this.appendMessage(message);
             this.scrollToBottom();
+            
+            // Send read receipt
+            this.sendReadReceipt(chatId, message.id);
         }
         
         // Update chat list
         this.loadChats();
+    }
+
+    sendTypingIndicator(isTyping) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && this.currentChat) {
+            this.ws.send(JSON.stringify({
+                type: 'typing',
+                chat_id: this.currentChat.id,
+                is_typing: isTyping
+            }));
+        }
+    }
+
+    showTypingIndicator(data) {
+        if (this.currentChat && this.currentChat.id === data.chat_id && data.user_id !== this.currentUser?.id) {
+            const indicator = document.getElementById('typing-indicator');
+            indicator.classList.remove('hidden');
+            
+            // Hide after 3 seconds
+            clearTimeout(this.typingTimeout);
+            this.typingTimeout = setTimeout(() => {
+                indicator.classList.add('hidden');
+            }, 3000);
+        }
     }
 
     // Chats
@@ -305,9 +401,46 @@ class DeceMSGApp {
         try {
             this.chats = await this.apiCall('/chats');
             this.renderChatList();
+            
+            // Fetch presence for all users
+            this.fetchPresence();
         } catch (error) {
             console.error('Failed to load chats:', error);
         }
+    }
+
+    async fetchPresence() {
+        const allUserIds = new Set();
+        this.chats.forEach(chat => {
+            chat.members.forEach(m => allUserIds.add(m.user_id));
+        });
+        
+        if (allUserIds.size > 0) {
+            try {
+                const presence = await this.apiCall(`/presence?user_ids=${Array.from(allUserIds).join(',')}`);
+                this.onlineUsers = presence;
+                this.updateChatStatuses();
+            } catch (error) {
+                console.error('Failed to fetch presence:', error);
+            }
+        }
+    }
+
+    updateChatStatuses() {
+        document.querySelectorAll('.chat-item').forEach(item => {
+            const chatId = item.dataset.chatId;
+            const chat = this.chats.find(c => c.id === chatId);
+            if (chat && chat.type === 'direct') {
+                const otherMember = chat.members.find(m => m.user_id !== this.currentUser?.id);
+                if (otherMember) {
+                    const isOnline = this.onlineUsers[otherMember.user_id];
+                    const presenceEl = item.querySelector('.presence-dot');
+                    if (presenceEl) {
+                        presenceEl.classList.toggle('online', isOnline);
+                    }
+                }
+            }
+        });
     }
 
     renderChatList() {
@@ -325,15 +458,17 @@ class DeceMSGApp {
         div.className = 'chat-item';
         div.dataset.chatId = chat.id;
         
-        // Get chat name
+        // Get chat name and avatar
         let name = chat.name;
         let avatar = '';
+        let isOnline = false;
         
         if (chat.type === 'direct') {
             const otherMember = chat.members.find(m => m.user_id !== this.currentUser?.id);
             if (otherMember?.user) {
                 name = otherMember.user.display_name || otherMember.user.username;
                 avatar = this.getInitials(name);
+                isOnline = this.onlineUsers[otherMember.user_id];
             }
         } else {
             avatar = chat.name ? this.getInitials(chat.name) : '?';
@@ -391,13 +526,12 @@ class DeceMSGApp {
             const otherMember = chat.members.find(m => m.user_id !== this.currentUser?.id);
             if (otherMember?.user) {
                 nameEl.textContent = otherMember.user.display_name || otherMember.user.username;
-                statusEl.textContent = this.searchResults[otherMember.user_id]?.is_online ? 'online' : 'offline';
-                statusEl.className = this.searchResults[otherMember.user_id]?.is_online ? 'online' : '';
+                const isOnline = this.onlineUsers[otherMember.user_id];
+                statusEl.innerHTML = `<span class="presence-dot ${isOnline ? 'online' : ''}"></span> <span class="status-text">${isOnline ? 'online' : 'offline'}</span>`;
             }
         } else {
             nameEl.textContent = chat.name || 'Group Chat';
-            statusEl.textContent = `${chat.members.length} members`;
-            statusEl.className = '';
+            statusEl.innerHTML = `<span class="status-text">${chat.members.length} members</span>`;
         }
 
         // Load messages
@@ -445,49 +579,227 @@ class DeceMSGApp {
         const senderName = msg.sender?.display_name || msg.sender?.username || 'Unknown';
         const isCurrentUser = msg.sender_id === this.currentUser?.id;
 
+        // Build message content
+        let contentHtml = '';
+        if (msg.message_type === 'image' && msg.file_url) {
+            contentHtml = `<img src="${msg.file_url}" class="message-image" onclick="app.previewImage('${msg.file_url}')">`;
+        } else if (msg.message_type === 'file' && msg.file_url) {
+            const icon = this.getFileIcon(msg.file_name);
+            contentHtml = `<a href="${msg.file_url}" class="message-file" target="_blank">
+                <span class="file-icon">${icon}</span>
+                <div class="file-details">
+                    <div class="file-name">${this.escapeHtml(msg.file_name || 'File')}</div>
+                    <div class="file-size">${this.formatFileSize(msg.file_size)}</div>
+                </div>
+            </a>`;
+        } else {
+            contentHtml = this.escapeHtml(msg.content);
+        }
+
+        // Build reactions
         let reactionsHtml = '';
         if (msg.reactions && Object.keys(msg.reactions).length > 0) {
             const reactions = Object.entries(msg.reactions)
-                .map(([emoji, data]) => `<span class="reaction-badge">${emoji} ${data.count}</span>`)
+                .map(([emoji, data]) => {
+                    const isMyReaction = data.user_ids?.includes(this.currentUser?.id);
+                    return `<span class="reaction-badge ${isMyReaction ? 'my-reaction' : ''}" data-emoji="${emoji}">${emoji} <span class="count">${data.count}</span></span>`;
+                })
                 .join('');
             reactionsHtml = `<div class="message-reactions">${reactions}</div>`;
         }
 
+        // Read receipt
+        let readReceipt = '';
+        if (msg.sender_id === this.currentUser?.id) {
+            readReceipt = '<span class="read-receipt">✓</span>';
+        }
+
         div.innerHTML = `
             ${!isCurrentUser ? `<div class="message-header"><span class="message-sender">${this.escapeHtml(senderName)}</span></div>` : ''}
-            <div class="message-content">${this.escapeHtml(msg.content)}</div>
+            <div class="message-content">${contentHtml}</div>
             <div class="message-footer">
                 <span class="message-time">${this.formatTime(msg.created_at)}</span>
+                ${readReceipt}
             </div>
             ${reactionsHtml}
         `;
 
+        // Add click handler for reactions
+        div.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.showReactionPicker(e, msg.id);
+        });
+
         container.appendChild(div);
+    }
+
+    showReactionPicker(event, messageId) {
+        this.selectedMessage = messageId;
+        const picker = document.getElementById('reaction-picker');
+        const rect = event.target.getBoundingClientRect();
+        
+        picker.style.top = `${rect.bottom + 5}px`;
+        picker.style.left = `${rect.left}px`;
+        picker.classList.remove('hidden');
+    }
+
+    hideReactionPicker() {
+        document.getElementById('reaction-picker').classList.add('hidden');
+        this.selectedMessage = null;
+    }
+
+    async addReaction(emoji) {
+        if (!this.selectedMessage || !this.currentChat) return;
+        
+        try {
+            await this.apiCall(`/messages/${this.selectedMessage}/reactions`, 'POST', { emoji });
+            this.hideReactionPicker();
+            await this.loadMessages(this.currentChat.id);
+        } catch (error) {
+            console.error('Failed to add reaction:', error);
+        }
+    }
+
+    updateMessageReactions(data) {
+        if (this.currentChat && this.currentChat.id === data.chat_id) {
+            this.loadMessages(data.chat_id);
+        }
+    }
+
+    updateReadReceipt(data) {
+        const msgEl = document.querySelector(`[data-message-id="${data.message_id}"]`);
+        if (msgEl) {
+            const receipt = msgEl.querySelector('.read-receipt');
+            if (receipt) {
+                receipt.textContent = '✓✓';
+                receipt.classList.add('read');
+            }
+        }
+    }
+
+    sendReadReceipt(chatId, messageId) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+                type: 'read',
+                chat_id: chatId,
+                message_id: messageId
+            }));
+        }
     }
 
     async sendMessage() {
         const input = document.getElementById('message-input');
         const content = input.value.trim();
 
-        if (!content || !this.currentChat) return;
+        if (!this.currentChat) return;
 
         try {
-            await this.apiCall(`/chats/${this.currentChat.id}/messages`, 'POST', {
-                content,
+            let messageData = {
+                content: content || (this.selectedFile ? 'Sent a file' : 'Sent a message'),
                 message_type: 'text'
-            });
+            };
+
+            if (this.selectedFile) {
+                const uploadData = await this.uploadFile(this.selectedFile);
+                messageData.message_type = uploadData.message_type;
+                messageData.file_url = uploadData.file_url;
+                messageData.file_name = uploadData.file_name;
+                messageData.file_size = uploadData.file_size;
+                messageData.content = content || `Sent a ${uploadData.message_type === 'image' ? 'image' : 'file'}`;
+            }
+
+            await this.apiCall(`/chats/${this.currentChat.id}/messages`, 'POST', messageData);
 
             input.value = '';
+            this.removeSelectedFile();
             await this.loadMessages(this.currentChat.id);
+            
+            this.sendTypingIndicator(false);
 
         } catch (error) {
             console.error('Failed to send message:', error);
         }
     }
 
+    async uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(`${this.apiBase}/upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('File upload failed');
+        }
+
+        return response.json();
+    }
+
+    handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        this.selectedFile = file;
+
+        const previewContainer = document.getElementById('file-preview-container');
+        const imagePreview = document.getElementById('file-preview-image');
+        const filePreview = document.getElementById('file-preview-info');
+        const fileName = document.getElementById('file-preview-name');
+
+        previewContainer.classList.remove('hidden');
+
+        if (file.type.startsWith('image/')) {
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.classList.remove('hidden');
+            filePreview.classList.add('hidden');
+        } else {
+            imagePreview.classList.add('hidden');
+            filePreview.classList.remove('hidden');
+            fileName.textContent = file.name;
+        }
+    }
+
+    removeSelectedFile() {
+        this.selectedFile = null;
+        document.getElementById('file-preview-container').classList.add('hidden');
+        document.getElementById('file-input').value = '';
+    }
+
+    previewImage(url) {
+        window.open(url, '_blank');
+    }
+
+    getFileIcon(filename) {
+        const ext = filename?.split('.').pop()?.toLowerCase();
+        const icons = {
+            'pdf': '📄',
+            'doc': '📝', 'docx': '📝',
+            'txt': '📃',
+            'xls': '📊', 'xlsx': '📊',
+            'zip': '📦', 'rar': '📦',
+            'mp3': '🎵', 'wav': '🎵',
+            'mp4': '🎬', 'avi': '🎬'
+        };
+        return icons[ext] || '📎';
+    }
+
+    formatFileSize(bytes) {
+        if (!bytes) return '';
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+    }
+
     // New Chat Modal
     showNewChatModal() {
         document.getElementById('new-chat-modal').classList.remove('hidden');
+        this.pendingMembers = [];
+        this.renderSelectedMembers();
     }
 
     hideNewChatModal() {
@@ -495,6 +807,7 @@ class DeceMSGApp {
         document.getElementById('new-chat-username').value = '';
         document.getElementById('group-name').value = '';
         document.getElementById('group-members').value = '';
+        this.pendingMembers = [];
     }
 
     setChatType(type) {
@@ -516,43 +829,47 @@ class DeceMSGApp {
         }
     }
 
+    renderSelectedMembers() {
+        const container = document.getElementById('selected-members');
+        container.innerHTML = '';
+        
+        this.pendingMembers.forEach(member => {
+            const div = document.createElement('div');
+            div.className = 'selected-member';
+            div.innerHTML = `
+                ${this.escapeHtml(member.display_name || member.username)}
+                <button data-user-id="${member.id}">×</button>
+            `;
+            div.querySelector('button').addEventListener('click', () => {
+                this.pendingMembers = this.pendingMembers.filter(m => m.id !== member.id);
+                this.renderSelectedMembers();
+            });
+            container.appendChild(div);
+        });
+    }
+
     async startNewChat() {
         const directBtn = document.getElementById('btn-direct-chat');
         
         try {
             if (directBtn.classList.contains('active')) {
-                // Direct message
                 const username = document.getElementById('new-chat-username').value.trim();
                 if (!username) {
                     alert('Please enter a username');
                     return;
                 }
 
-                // Parse username#domain format
                 let targetUsername = username;
-                let targetDomain = this.currentUser?.domain || 'localhost';
-                
                 if (username.includes('#')) {
                     const parts = username.split('#');
                     targetUsername = parts[0];
-                    targetDomain = parts[1];
                 }
 
-                // Search for user
                 const users = await this.apiCall(`/users/search?q=${targetUsername}`);
-                const targetUser = users.find(u => 
-                    u.username === targetUsername && 
-                    (u.domain === targetDomain || u.domain === 'localhost')
-                );
+                const targetUser = users.find(u => u.username === targetUsername);
 
                 if (!targetUser) {
-                    // Check if local user
-                    if (targetDomain === this.currentUser?.domain || targetDomain === 'localhost') {
-                        alert('User not found');
-                        return;
-                    }
-                    // For federated users, we'd need to look them up via federation
-                    alert('User not found on this server');
+                    alert('User not found');
                     return;
                 }
 
@@ -566,23 +883,19 @@ class DeceMSGApp {
                 this.openChat(chat);
 
             } else {
-                // Group chat
                 const groupName = document.getElementById('group-name').value.trim();
-                const membersInput = document.getElementById('group-members').value.trim();
 
                 if (!groupName) {
                     alert('Please enter a group name');
                     return;
                 }
 
-                // Parse member list
-                const memberUsernames = membersInput.split(',').map(m => m.trim()).filter(m => m);
+                const memberIds = this.pendingMembers.map(m => m.id);
                 
-                // For now, we'll create a group without member validation
                 const chat = await this.apiCall('/chats', 'POST', {
                     type: 'group',
                     name: groupName,
-                    member_ids: []
+                    member_ids: memberIds
                 });
 
                 this.hideNewChatModal();
@@ -593,6 +906,151 @@ class DeceMSGApp {
             console.error('Failed to start chat:', error);
             alert(error.message);
         }
+    }
+
+    // Chat Info Panel
+    toggleChatInfoPanel() {
+        const panel = document.getElementById('chat-info-panel');
+        panel.classList.toggle('hidden');
+        
+        if (!panel.classList.contains('hidden') && this.currentChat) {
+            this.loadChatInfo();
+        }
+    }
+
+    async loadChatInfo() {
+        if (!this.currentChat) return;
+
+        const infoName = document.getElementById('info-name');
+        const infoType = document.getElementById('info-type');
+        const infoAvatar = document.getElementById('info-avatar');
+        
+        if (this.currentChat.type === 'direct') {
+            const otherMember = this.currentChat.members.find(m => m.user_id !== this.currentUser?.id);
+            if (otherMember?.user) {
+                infoName.textContent = otherMember.user.display_name || otherMember.user.username;
+                infoAvatar.textContent = this.getInitials(otherMember.user.display_name);
+            }
+            infoType.textContent = 'Direct Message';
+            document.querySelector('.group-only').classList.add('hidden');
+        } else {
+            infoName.textContent = this.currentChat.name || 'Group Chat';
+            infoAvatar.textContent = this.getInitials(this.currentChat.name);
+            infoType.textContent = `${this.currentChat.members.length} members`;
+            document.querySelector('.group-only').classList.remove('hidden');
+        }
+
+        const membersList = document.getElementById('members-list');
+        membersList.innerHTML = '';
+        
+        this.currentChat.members.forEach(member => {
+            const isAdmin = member.role === 'admin';
+            const div = document.createElement('div');
+            div.className = 'member-item';
+            div.innerHTML = `
+                <div class="avatar">${this.getInitials(member.user?.display_name || member.user?.username)}</div>
+                <div class="member-info">
+                    <div class="member-name">${this.escapeHtml(member.user?.display_name || member.user?.username)}</div>
+                    <div class="member-role">${isAdmin ? 'Admin' : 'Member'}</div>
+                </div>
+                ${this.currentChat.type === 'group' && (this.currentUser?.is_admin || isAdmin) && member.user_id !== this.currentUser?.id ? `
+                    <div class="member-actions">
+                        <button class="btn-secondary" onclick="app.removeMember('${member.user_id}')">Remove</button>
+                    </div>
+                ` : ''}
+            `;
+            membersList.appendChild(div);
+        });
+
+        document.getElementById('keep-history-toggle').checked = this.currentChat.keep_history;
+    }
+
+    async updateChatSetting(setting, value) {
+        if (!this.currentChat) return;
+
+        try {
+            await this.apiCall(`/chats/${this.currentChat.id}`, 'PUT', { [setting]: value });
+            this.currentChat[setting] = value;
+        } catch (error) {
+            console.error('Failed to update chat setting:', error);
+        }
+    }
+
+    async removeMember(userId) {
+        if (!this.currentChat) return;
+
+        try {
+            await this.apiCall(`/chats/${this.currentChat.id}/members/${userId}`, 'DELETE');
+            await this.loadChats();
+            this.currentChat = this.chats.find(c => c.id === this.currentChat.id);
+            this.loadChatInfo();
+        } catch (error) {
+            console.error('Failed to remove member:', error);
+        }
+    }
+
+    async leaveGroup() {
+        if (!this.currentChat || this.currentChat.type !== 'group') return;
+
+        try {
+            await this.apiCall(`/chats/${this.currentChat.id}/members/${this.currentUser?.id}`, 'DELETE');
+            this.toggleChatInfoPanel();
+            this.loadChats();
+        } catch (error) {
+            console.error('Failed to leave group:', error);
+        }
+    }
+
+    showAddMemberModal() {
+        document.getElementById('add-member-modal').classList.remove('hidden');
+        document.getElementById('add-member-username').value = '';
+        document.getElementById('search-member-result').innerHTML = '';
+    }
+
+    hideAddMemberModal() {
+        document.getElementById('add-member-modal').classList.add('hidden');
+    }
+
+    async searchMember() {
+        const username = document.getElementById('add-member-username').value.trim();
+        if (!username) return;
+
+        try {
+            const users = await this.apiCall(`/users/search?q=${username}`);
+            const resultDiv = document.getElementById('search-member-result');
+            
+            if (users.length === 0) {
+                resultDiv.innerHTML = '<p>No users found</p>';
+                return;
+            }
+
+            const user = users[0];
+            const isAlreadyMember = this.currentChat?.members.some(m => m.user_id === user.id);
+            const isPending = this.pendingMembers.some(m => m.id === user.id);
+
+            resultDiv.innerHTML = `
+                <div class="user-item">
+                    <div class="avatar">${this.getInitials(user.display_name)}</div>
+                    <div class="user-item-info">
+                        <div class="user-item-name">${this.escapeHtml(user.display_name)}</div>
+                        <div class="user-item-email">@${this.escapeHtml(user.username)}</div>
+                    </div>
+                    ${!isAlreadyMember && !isPending ? `
+                        <button class="btn-primary" onclick='app.addPendingMember(${JSON.stringify(user).replace(/"/g, '&quot;')})'>Add</button>
+                    ` : isPending ? '<span>Already added</span>' : '<span>Already in chat</span>'}
+                </div>
+            `;
+        } catch (error) {
+            console.error('Failed to search member:', error);
+        }
+    }
+
+    addPendingMember(user) {
+        if (!this.pendingMembers.find(m => m.id === user.id)) {
+            this.pendingMembers.push(user);
+            this.renderSelectedMembers();
+        }
+        this.hideAddMemberModal();
     }
 
     // Admin Panel
@@ -803,32 +1261,17 @@ class DeceMSGApp {
         container.scrollTop = container.scrollHeight;
     }
 
-    updateMessageReactions(data) {
-        // Handle reaction updates
-        this.loadMessages(this.currentChat?.id);
-    }
-
     updatePresence(userId, isOnline) {
-        this.searchResults[userId] = { is_online: isOnline };
+        this.onlineUsers[userId] = isOnline;
+        this.updateChatStatuses();
         
-        if (this.currentChat) {
+        if (this.currentChat && this.currentChat.type === 'direct') {
             const otherMember = this.currentChat.members.find(m => m.user_id === userId);
             if (otherMember) {
                 const statusEl = document.getElementById('chat-status');
-                if (userId === otherMember.user_id) {
-                    statusEl.textContent = isOnline ? 'online' : 'offline';
-                    statusEl.className = isOnline ? 'online' : '';
-                }
+                statusEl.innerHTML = `<span class="presence-dot ${isOnline ? 'online' : ''}"></span> <span class="status-text">${isOnline ? 'online' : 'offline'}</span>`;
             }
         }
-    }
-
-    showTypingIndicator(data) {
-        // Could show "typing..." indicator
-    }
-
-    updateReadReceipt(data) {
-        // Handle read receipts
     }
 }
 

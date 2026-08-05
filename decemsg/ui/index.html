@@ -63,7 +63,7 @@
                             <div id="chat-avatar" class="avatar"></div>
                             <div class="chat-details">
                                 <span id="chat-name">Chat Name</span>
-                                <span id="chat-status">online</span>
+                                <span id="chat-status"><span class="presence-dot"></span> <span class="status-text">offline</span></span>
                             </div>
                         </div>
                         <div class="chat-actions">
@@ -75,10 +75,66 @@
                         <!-- Messages will be loaded here -->
                     </div>
 
+                    <div id="typing-indicator" class="typing-indicator hidden">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-text">Someone is typing...</span>
+                    </div>
+
                     <div class="message-input-area">
+                        <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx,.txt" class="hidden">
                         <button id="btn-attach" class="icon-btn" title="Attach File">📎</button>
+                        <div id="file-preview-container" class="file-preview-container hidden">
+                            <img id="file-preview-image" class="file-preview-image hidden">
+                            <div id="file-preview-info" class="file-preview-info hidden">
+                                <span id="file-preview-name"></span>
+                                <button id="btn-remove-file" class="icon-btn">×</button>
+                            </div>
+                        </div>
                         <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
                         <button id="btn-send" class="icon-btn send-btn" title="Send">➤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Info Sidebar -->
+            <div id="chat-info-panel" class="hidden">
+                <div class="chat-info-header">
+                    <button id="btn-close-chat-info" class="icon-btn">←</button>
+                    <h3>Chat Info</h3>
+                </div>
+                <div class="chat-info-content">
+                    <div class="chat-info-avatar">
+                        <div id="info-avatar" class="avatar large"></div>
+                        <span id="info-name"></span>
+                        <span id="info-type" class="info-type"></span>
+                    </div>
+                    
+                    <div class="chat-info-section">
+                        <h4>Members</h4>
+                        <div id="members-list" class="members-list">
+                            <!-- Members will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="chat-info-section">
+                        <h4>Media</h4>
+                        <div id="media-gallery" class="media-gallery">
+                            <!-- Shared media will be shown here -->
+                        </div>
+                    </div>
+
+                    <div class="chat-info-section">
+                        <h4>Settings</h4>
+                        <label class="toggle-setting">
+                            <span>Keep Message History</span>
+                            <input type="checkbox" id="keep-history-toggle" checked>
+                        </label>
+                    </div>
+
+                    <div class="chat-info-section group-only hidden">
+                        <button id="btn-leave-group" class="btn-danger">Leave Group</button>
                     </div>
                 </div>
             </div>
@@ -152,7 +208,9 @@
                     
                     <div id="group-chat-form" class="hidden">
                         <input type="text" id="group-name" placeholder="Group name">
-                        <input type="text" id="group-members" placeholder="Add members (username#domain, comma separated)">
+                        <input type="text" id="group-members" placeholder="Add members (comma separated usernames)">
+                        <button id="btn-add-member" class="btn-secondary">+ Add Member</button>
+                        <div id="selected-members" class="selected-members"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -180,6 +238,31 @@
                         </label>
                         <button type="submit" class="btn-primary">Create</button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reaction Picker -->
+        <div id="reaction-picker" class="reaction-picker hidden">
+            <button class="reaction-btn" data-emoji="👍">👍</button>
+            <button class="reaction-btn" data-emoji="❤️">❤️</button>
+            <button class="reaction-btn" data-emoji="😂">😂</button>
+            <button class="reaction-btn" data-emoji="😮">😮</button>
+            <button class="reaction-btn" data-emoji="😢">😢</button>
+            <button class="reaction-btn" data-emoji="🎉">🎉</button>
+        </div>
+
+        <!-- Add Member Modal -->
+        <div id="add-member-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Member</h3>
+                    <button id="btn-close-add-member" class="icon-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="add-member-username" placeholder="Enter username">
+                    <button id="btn-search-member" class="btn-primary">Search</button>
+                    <div id="search-member-result" class="search-result"></div>
                 </div>
             </div>
         </div>
