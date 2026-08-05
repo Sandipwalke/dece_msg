@@ -19,6 +19,7 @@ from decemsg.api import (
     admin_router,
     websocket_router,
 )
+from decemsg.federation import router as federation_router
 
 
 # Determine UI directory
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(messages_router)
     app.include_router(admin_router)
     app.include_router(websocket_router)
+    app.include_router(federation_router)
     
     # Root redirect to UI
     @app.get("/")
@@ -110,6 +112,8 @@ def create_app() -> FastAPI:
     app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
     app.mount("/ui/styles.css", StaticFiles(directory=str(_ui_dir), html=False), name="styles")
     app.mount("/ui/app.js", StaticFiles(directory=str(_ui_dir), html=False), name="app_js")
+    app.mount("/ui/manifest.json", StaticFiles(directory=str(_ui_dir), html=False), name="manifest")
+    app.mount("/ui/sw.js", StaticFiles(directory=str(_ui_dir), html=False), name="sw")
     
     return app
 

@@ -1,0 +1,30 @@
+{
+  "name": "DeceMSG - Decentralized Messaging",
+  "short_name": "DeceMSG",
+  "description": "Decentralized messaging platform with federation support",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#128C7E",
+  "theme_color": "#128C7E",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/ui/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["social", "communication"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "short_name": "New",
+      "description": "Start a new chat",
+      "url": "/?action=new-chat",
+      "icons": [{ "src": "/ui/icon.svg", "sizes": "any" }]
+    }
+  ]
+}

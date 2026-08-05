@@ -19,6 +19,9 @@ class DeceMSGApp {
     }
 
     init() {
+        // Initialize PWA
+        this.initPWA();
+        
         // Check authentication
         if (this.token) {
             this.showMainScreen();
@@ -28,6 +31,60 @@ class DeceMSGApp {
         }
         
         this.bindEvents();
+    }
+
+    // PWA Initialization
+    initPWA() {
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/ui/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content available
+                                    console.log('New content available, refresh to update');
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('SW registration failed:', error);
+                    });
+            });
+        }
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            this.requestNotificationPermission();
+        }
+    }
+
+    async requestNotificationPermission() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        } catch (error) {
+            console.error('Notification permission denied:', error);
+        }
+    }
+
+    showNotification(title, body, options = {}) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, {
+                body,
+                icon: '/ui/icon-192.png',
+                badge: '/ui/icon-192.png',
+                ...options
+            });
+        }
     }
 
     bindEvents() {
@@ -371,17 +428,30 @@ class DeceMSGApp {
             case 'read_receipt':
                 this.updateReadReceipt(data);
                 break;
+            case 'push_notification':
+                this.showNotification(data.title || 'New Message', data.body);
+                break;
         }
     }
 
     handleNewMessage(message, chatId) {
-        if (this.currentChat && this.currentChat.id === chatId) {
+        const isCurrentChat = this.currentChat && this.currentChat.id === chatId;
+        
+        if (isCurrentChat) {
             // Add message to current chat
             this.appendMessage(message);
             this.scrollToBottom();
             
             // Send read receipt
             this.sendReadReceipt(chatId, message.id);
+        } else {
+            // Show push notification if not focused
+            if (document.hidden) {
+                this.showNotification(
+                    message.sender?.display_name || 'New Message',
+                    message.content || 'Sent you a message'
+                );
+            }
         }
         
         // Update chat list
