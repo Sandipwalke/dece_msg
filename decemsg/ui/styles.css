@@ -1171,3 +1171,338 @@ body {
     font-size: 12px;
     color: var(--text-secondary);
 }
+
+/* Phase 3 - Enhanced Admin Styles */
+
+/* User Stats Summary */
+.user-stats-summary {
+    padding: 8px 0;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Config Sections */
+.config-section {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.config-section:last-of-type {
+    border-bottom: none;
+}
+
+.config-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.config-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.config-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.config-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.config-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.config-input label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.config-input input[type="text"],
+.config-input input[type="number"] {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.config-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Save Status */
+.save-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.save-status.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.save-status.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Stats Overview */
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stats-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg-input);
+    border-radius: 12px;
+}
+
+.stats-icon {
+    font-size: 28px;
+}
+
+.stats-info {
+    flex: 1;
+}
+
+.stats-card .stats-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stats-card .stats-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* Activity Stats */
+.stats-timeline {
+    margin-bottom: 24px;
+}
+
+.stats-timeline h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.activity-stats {
+    background: var(--bg-input);
+    border-radius: 12px;
+    padding: 8px 0;
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.activity-value {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Uptime */
+.stats-uptime h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.uptime-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary);
+    font-family: monospace;
+}
+
+/* System Sections */
+.system-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.system-section:last-child {
+    border-bottom: none;
+}
+
+.system-section h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.system-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* Backup */
+.backup-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.backup-status.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.backup-status.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.backup-list {
+    margin-top: 16px;
+}
+
+.backup-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.backup-item .backup-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.backup-item .backup-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.backup-item .backup-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.backup-item .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Log Viewer */
+.log-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.log-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg-white);
+}
+
+.log-viewer {
+    background: var(--bg-dark);
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.log-viewer pre {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    color: #e0e0e0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+}
+
+/* Server Info */
+.server-info {
+    background: var(--bg-input);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Enhanced Admin Panel */
+#admin-panel {
+    width: 450px;
+}
+
+#admin-panel .admin-header {
+    justify-content: space-between;
+}
+
+#admin-panel .admin-tabs {
+    overflow-x: auto;
+}
+
+#admin-panel .tab-btn {
+    min-width: auto;
+    padding: 12px 16px;
+    white-space: nowrap;
+}

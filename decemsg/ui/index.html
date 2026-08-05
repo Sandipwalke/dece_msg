@@ -144,12 +144,14 @@
                 <div class="admin-header">
                     <button id="btn-close-admin" class="icon-btn">←</button>
                     <h2>Admin Panel</h2>
+                    <button id="btn-refresh-stats" class="icon-btn" title="Refresh">↻</button>
                 </div>
                 
                 <div class="admin-tabs">
                     <button class="tab-btn active" data-tab="users">Users</button>
                     <button class="tab-btn" data-tab="config">Settings</button>
                     <button class="tab-btn" data-tab="stats">Statistics</button>
+                    <button class="tab-btn" data-tab="system">System</button>
                 </div>
 
                 <div id="tab-users" class="tab-content active">
@@ -157,32 +159,170 @@
                         <button id="btn-create-user" class="btn-primary">+ Create User</button>
                         <input type="text" id="search-users" placeholder="Search users...">
                     </div>
+                    <div id="user-stats-summary" class="user-stats-summary">
+                        <span id="total-users-count">Total: 0</span>
+                    </div>
                     <div id="user-list" class="user-list">
                         <!-- Users will be loaded here -->
                     </div>
                 </div>
 
                 <div id="tab-config" class="tab-content">
-                    <div class="config-form">
-                        <label>
-                            <input type="checkbox" id="config-public-registration">
-                            Allow Public Registration
-                        </label>
-                        <label>
-                            <input type="checkbox" id="config-user-group-creation">
-                            Allow Users to Create Groups
-                        </label>
-                        <label>
-                            <input type="checkbox" id="config-keep-history" checked>
-                            Keep Message History by Default
-                        </label>
-                        <button id="btn-save-config" class="btn-primary">Save Settings</button>
+                    <div class="config-section">
+                        <h4>Authentication</h4>
+                        <div class="config-form">
+                            <label class="config-label">
+                                <span>Allow Public Registration</span>
+                                <input type="checkbox" id="config-public-registration">
+                            </label>
+                            <label class="config-label">
+                                <span>Allow Users to Create Groups</span>
+                                <input type="checkbox" id="config-user-group-creation">
+                            </label>
+                        </div>
                     </div>
+                    
+                    <div class="config-section">
+                        <h4>Messaging</h4>
+                        <div class="config-form">
+                            <label class="config-label">
+                                <span>Keep Message History by Default</span>
+                                <input type="checkbox" id="config-keep-history" checked>
+                            </label>
+                            <div class="config-input">
+                                <label>Max File Size (MB)</label>
+                                <input type="number" id="config-max-file-size" min="1" max="100" value="10">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h4>Server Identity</h4>
+                        <div class="config-form">
+                            <div class="config-input">
+                                <label>Server Domain</label>
+                                <input type="text" id="config-domain" placeholder="example.com">
+                            </div>
+                            <div class="config-input">
+                                <label>Server Title</label>
+                                <input type="text" id="config-title" placeholder="My DeceMSG Server">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h4>Federation</h4>
+                        <div class="config-form">
+                            <label class="config-label">
+                                <span>Enable Federation</span>
+                                <input type="checkbox" id="config-federation" checked>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button id="btn-save-config" class="btn-primary">Save Settings</button>
+                    <div id="config-save-status" class="save-status"></div>
                 </div>
 
                 <div id="tab-stats" class="tab-content">
-                    <div id="server-stats" class="stats-grid">
-                        <!-- Stats will be loaded here -->
+                    <div class="stats-overview">
+                        <div class="stats-card">
+                            <div class="stats-icon">👥</div>
+                            <div class="stats-info">
+                                <div class="stats-value" id="stat-total-users">0</div>
+                                <div class="stats-label">Total Users</div>
+                            </div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="stats-icon">💬</div>
+                            <div class="stats-info">
+                                <div class="stats-value" id="stat-total-chats">0</div>
+                                <div class="stats-label">Total Chats</div>
+                            </div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="stats-icon">📨</div>
+                            <div class="stats-info">
+                                <div class="stats-value" id="stat-total-messages">0</div>
+                                <div class="stats-label">Total Messages</div>
+                            </div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="stats-icon">📊</div>
+                            <div class="stats-info">
+                                <div class="stats-value" id="stat-storage">0 MB</div>
+                                <div class="stats-label">Storage Used</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-timeline">
+                        <h4>Activity (24h)</h4>
+                        <div class="activity-stats">
+                            <div class="activity-item">
+                                <span class="activity-label">Active Users (24h)</span>
+                                <span class="activity-value" id="stat-active-24h">0</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">Active Users (7d)</span>
+                                <span class="activity-value" id="stat-active-7d">0</span>
+                            </div>
+                            <div class="activity-item">
+                                <span class="activity-label">Active Users (30d)</span>
+                                <span class="activity-value" id="stat-active-30d">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-uptime">
+                        <h4>Server Uptime</h4>
+                        <div class="uptime-value" id="stat-uptime">0:00:00</div>
+                    </div>
+                </div>
+
+                <div id="tab-system" class="tab-content">
+                    <div class="system-section">
+                        <h4>Backup</h4>
+                        <p class="system-description">Create a backup of your database and configuration.</p>
+                        <button id="btn-create-backup" class="btn-primary">Create Backup</button>
+                        <div id="backup-status" class="backup-status"></div>
+                        <div id="backup-list" class="backup-list">
+                            <!-- Backups will be listed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="system-section">
+                        <h4>Server Logs</h4>
+                        <p class="system-description">View recent server activity logs.</p>
+                        <div class="log-controls">
+                            <select id="log-lines">
+                                <option value="50">Last 50 lines</option>
+                                <option value="100" selected>Last 100 lines</option>
+                                <option value="200">Last 200 lines</option>
+                            </select>
+                            <button id="btn-refresh-logs" class="btn-secondary">Refresh</button>
+                        </div>
+                        <div id="log-viewer" class="log-viewer">
+                            <pre id="log-content">Loading...</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="system-section">
+                        <h4>Server Info</h4>
+                        <div class="server-info">
+                            <div class="info-row">
+                                <span class="info-label">Version</span>
+                                <span class="info-value" id="server-version">0.1.0</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Domain</span>
+                                <span class="info-value" id="server-domain">localhost</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Database</span>
+                                <span class="info-value" id="server-db-type">SQLite</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

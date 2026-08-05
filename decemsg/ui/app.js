@@ -140,6 +140,21 @@ class DeceMSGApp {
             this.loadUsers(e.target.value);
         });
 
+        // Refresh stats button
+        document.getElementById('btn-refresh-stats').addEventListener('click', () => {
+            this.loadStats();
+        });
+
+        // Refresh logs button
+        document.getElementById('btn-refresh-logs').addEventListener('click', () => {
+            this.loadLogs();
+        });
+
+        // Create backup button
+        document.getElementById('btn-create-backup').addEventListener('click', () => {
+            this.createBackup();
+        });
+
         // Back button (mobile)
         document.getElementById('btn-back').addEventListener('click', () => {
             document.getElementById('sidebar').classList.remove('hidden');
@@ -1161,21 +1176,44 @@ class DeceMSGApp {
             document.getElementById('config-public-registration').checked = config.allow_public_registration;
             document.getElementById('config-user-group-creation').checked = config.allow_user_group_creation;
             document.getElementById('config-keep-history').checked = config.default_keep_history;
+            document.getElementById('config-max-file-size').value = config.max_file_size_mb;
+            document.getElementById('config-domain').value = config.domain;
+            document.getElementById('config-title').value = config.title;
+            document.getElementById('config-federation').checked = config.federation_enabled;
+            
+            // Update server info
+            document.getElementById('server-version').textContent = '0.1.0';
+            document.getElementById('server-domain').textContent = config.domain;
+            document.getElementById('server-db-type').textContent = 'SQLite';
         } catch (error) {
             console.error('Failed to load config:', error);
         }
     }
 
     async saveConfig() {
+        const statusEl = document.getElementById('config-save-status');
+        
         try {
-            await this.apiCall('/admin/config', 'PUT', {
+            const configData = {
                 allow_public_registration: document.getElementById('config-public-registration').checked,
                 allow_user_group_creation: document.getElementById('config-user-group-creation').checked,
-                default_keep_history: document.getElementById('config-keep-history').checked
-            });
-            alert('Settings saved!');
+                default_keep_history: document.getElementById('config-keep-history').checked,
+                max_file_size_mb: parseInt(document.getElementById('config-max-file-size').value),
+                title: document.getElementById('config-title').value,
+                federation_enabled: document.getElementById('config-federation').checked
+            };
+            
+            await this.apiCall('/admin/config', 'PUT', configData);
+            
+            statusEl.textContent = 'Settings saved successfully!';
+            statusEl.className = 'save-status success';
+            setTimeout(() => {
+                statusEl.textContent = '';
+                statusEl.className = 'save-status';
+            }, 3000);
         } catch (error) {
-            alert(error.message);
+            statusEl.textContent = error.message;
+            statusEl.className = 'save-status error';
         }
     }
 
@@ -1189,33 +1227,126 @@ class DeceMSGApp {
     }
 
     renderStats(stats) {
-        const container = document.getElementById('server-stats');
+        // Update overview cards
+        document.getElementById('stat-total-users').textContent = stats.total_users;
+        document.getElementById('stat-total-chats').textContent = stats.total_chats;
+        document.getElementById('stat-total-messages').textContent = stats.total_messages;
+        document.getElementById('stat-storage').textContent = `${stats.storage_used_mb} MB`;
+        
+        // Update activity stats
+        document.getElementById('stat-active-24h').textContent = stats.active_users_24h;
+        document.getElementById('stat-active-7d').textContent = stats.active_users_7d;
+        document.getElementById('stat-active-30d').textContent = stats.active_users_30d;
+        
+        // Update uptime
+        const uptime = this.formatUptime(stats.uptime_seconds);
+        document.getElementById('stat-uptime').textContent = uptime;
+        
+        // Update user count in user tab
+        document.getElementById('total-users-count').textContent = `Total: ${stats.total_users}`;
+    }
+    
+    formatUptime(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    async loadUsers(search = '') {
+        try {
+            const data = await this.apiCall(`/users?search=${search}`);
+            this.renderUserList(data.users);
+            document.getElementById('total-users-count').textContent = `Total: ${data.total}`;
+        } catch (error) {
+            console.error('Failed to load users:', error);
+        }
+    }
+
+    renderUserList(users) {
+        const container = document.getElementById('user-list');
+        container.innerHTML = '';
+
+        if (users.length === 0) {
+            container.innerHTML = '<p class="empty-message">No users found</p>';
+            return;
+        }
+
+        users.forEach(user => {
+            const div = document.createElement('div');
+            div.className = 'user-item';
+            
+            const onlineIndicator = user.is_active ? '<span class="presence-dot online"></span>' : '<span class="presence-dot"></span>';
+            
+            div.innerHTML = `
+                <div class="avatar">${this.getInitials(user.display_name)}</div>
+                <div class="user-item-info">
+                    <div class="user-item-name">${this.escapeHtml(user.display_name)} ${user.is_admin ? '👑' : ''}</div>
+                    <div class="user-item-email">@${this.escapeHtml(user.username)}#${this.escapeHtml(user.domain)}</div>
+                </div>
+                <div class="user-item-actions">
+                    ${user.is_active ? 
+                        `<button class="btn-secondary btn-small" onclick="app.deactivateUser('${user.id}')">Deactivate</button>` :
+                        `<button class="btn-primary btn-small" onclick="app.activateUser('${user.id}')">Activate</button>`
+                    }
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    async createBackup() {
+        const statusEl = document.getElementById('backup-status');
+        
+        try {
+            statusEl.textContent = 'Creating backup...';
+            statusEl.className = 'backup-status';
+            
+            const result = await this.apiCall('/admin/backup', 'POST');
+            
+            statusEl.textContent = `Backup created: ${result.backup_path}`;
+            statusEl.className = 'backup-status success';
+            
+            this.loadBackupList();
+            
+            setTimeout(() => {
+                statusEl.textContent = '';
+                statusEl.className = 'backup-status';
+            }, 5000);
+        } catch (error) {
+            statusEl.textContent = error.message;
+            statusEl.className = 'backup-status error';
+        }
+    }
+
+    loadBackupList() {
+        const container = document.getElementById('backup-list');
+        // For now, show a message about backups
         container.innerHTML = `
-            <div class="stat-card">
-                <div class="stat-value">${stats.total_users}</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">${stats.active_users_24h}</div>
-                <div class="stat-label">Active (24h)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">${stats.total_chats}</div>
-                <div class="stat-label">Total Chats</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">${stats.total_messages}</div>
-                <div class="stat-label">Total Messages</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">${stats.active_users_7d}</div>
-                <div class="stat-label">Active (7d)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">${stats.storage_used_mb} MB</div>
-                <div class="stat-label">Storage Used</div>
+            <div class="backup-item">
+                <div>
+                    <div class="backup-name">Manual backup created</div>
+                    <div class="backup-date">Check data/backups folder</div>
+                </div>
             </div>
         `;
+    }
+
+    async loadLogs() {
+        const lines = document.getElementById('log-lines').value;
+        const container = document.getElementById('log-content');
+        
+        try {
+            const result = await this.apiCall(`/admin/logs?lines=${lines}`);
+            
+            if (result.logs && result.logs.length > 0) {
+                container.textContent = result.logs.join('');
+            } else {
+                container.textContent = 'No logs available';
+            }
+        } catch (error) {
+            container.textContent = `Error loading logs: ${error.message}`;
+        }
     }
 
     // Utility Methods

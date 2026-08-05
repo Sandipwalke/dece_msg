@@ -1,10 +1,10 @@
 """DeceMSG admin API endpoints."""
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 import os
 import shutil
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -46,12 +46,12 @@ class ServerConfig(BaseModel):
 
 class ConfigUpdate(BaseModel):
     """Configuration update request."""
-    title: str | None = None
-    allow_public_registration: bool | None = None
-    allow_user_group_creation: bool | None = None
-    default_keep_history: bool | None = None
-    max_file_size_mb: int | None = None
-    federation_enabled: bool | None = None
+    title: Optional[str] = None
+    allow_public_registration: Optional[bool] = None
+    allow_user_group_creation: Optional[bool] = None
+    default_keep_history: Optional[bool] = None
+    max_file_size_mb: Optional[int] = None
+    federation_enabled: Optional[bool] = None
 
 
 # Store server start time
@@ -213,7 +213,7 @@ async def create_backup(
 
 @router.get("/logs")
 async def get_server_logs(
-    lines: int = 100,
+    lines: int = Query(100, ge=10, le=500),
     current_user: User = Depends(get_current_admin_user)
 ):
     """Get recent server logs."""
