@@ -1,0 +1,170 @@
+"""DeceMSG authentication API endpoints."""
+from datetime import timedelta
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from decemsg.core.database import get_db
+from decemsg.core.auth import (
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    get_current_user,
+)
+from decemsg.core.config import get_config
+from decemsg.models.user import User
+
+router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+
+# Request/Response Models
+class Token(BaseModel):
+    """JWT token response."""
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserCreate(BaseModel):
+    """User creation request."""
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_]+$")
+    display_name: str = Field(..., min_length=1, max_length=100)
+    password: str = Field(..., min_length=6)
+    domain: str | None = None
+
+
+class UserLogin(BaseModel):
+    """User login request."""
+    username: str
+    password: str
+
+
+class UserResponse(BaseModel):
+    """User response model."""
+    id: str
+    username: str
+    display_name: str
+    domain: str
+    avatar_url: str | None
+    created_at: str | None
+    last_seen: str | None
+    is_active: bool
+    is_admin: bool
+
+    class Config:
+        from_attributes = True
+
+
+@router.post("/login", response_model=Token)
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: AsyncSession = Depends(get_db)
+):
+    """Authenticate user and return JWT token."""
+    config = get_config()
+    
+    # Find user by username
+    result = await db.execute(
+        select(User).where(User.username == form_data.username)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated"
+        )
+    
+    # Create access token
+    access_token_expires = timedelta(hours=config.auth.jwt_expiry_hours)
+    access_token = create_access_token(
+        data={"sub": user.id},
+        expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/register", response_model=UserResponse)
+async def register(
+    user_data: UserCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Register a new user (if public registration is enabled)."""
+    config = get_config()
+    
+    if not config.auth.allow_public_registration:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Public registration is disabled. Contact an admin to create your account."
+        )
+    
+    # Check if username already exists
+    result = await db.execute(
+        select(User).where(User.username == user_data.username)
+    )
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
+    
+    # Create user
+    domain = user_data.domain or config.server.domain
+    user = User(
+        username=user_data.username,
+        display_name=user_data.display_name,
+        password_hash=get_password_hash(user_data.password),
+        domain=domain,
+        is_admin=False,
+    )
+    
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        display_name=user.display_name,
+        domain=user.domain,
+        avatar_url=user.avatar_url,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+        last_seen=user.last_seen.isoformat() if user.last_seen else None,
+        is_active=user.is_active,
+        is_admin=user.is_admin,
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current authenticated user information."""
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        display_name=current_user.display_name,
+        domain=current_user.domain,
+        avatar_url=current_user.avatar_url,
+        created_at=current_user.created_at.isoformat() if current_user.created_at else None,
+        last_seen=current_user.last_seen.isoformat() if current_user.last_seen else None,
+        is_active=current_user.is_active,
+        is_admin=current_user.is_admin,
+    )
+
+
+@router.post("/logout")
+async def logout(current_user: User = Depends(get_current_user)):
+    """Logout current user (client should discard token)."""
+    return {"message": "Successfully logged out"}

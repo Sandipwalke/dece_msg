@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeceMSG - Decentralized Messaging</title>
+    <link rel="stylesheet" href="/ui/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <div class="logo">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="#128C7E">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    <h1>DeceMSG</h1>
+                    <p>Decentralized Messaging</p>
+                </div>
+                <form id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+                <p id="login-error" class="error hidden"></p>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="main-screen" class="screen">
+            <!-- Sidebar (Chat List) -->
+            <div id="sidebar">
+                <div class="sidebar-header">
+                    <h2>Chats</h2>
+                    <div class="header-actions">
+                        <button id="btn-new-chat" class="icon-btn" title="New Chat">+</button>
+                        <button id="btn-settings" class="icon-btn" title="Settings">⚙️</button>
+                    </div>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="search-chats" placeholder="Search or start new chat...">
+                </div>
+                <div id="chat-list" class="chat-list">
+                    <!-- Chat items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat View -->
+            <div id="chat-view">
+                <div id="no-chat-selected" class="empty-state">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="#ddd">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                    </svg>
+                    <h3>Welcome to DeceMSG</h3>
+                    <p>Select a chat or start a new conversation</p>
+                </div>
+
+                <div id="chat-content" class="hidden">
+                    <div class="chat-header">
+                        <button id="btn-back" class="icon-btn hidden-mobile">←</button>
+                        <div class="chat-info">
+                            <div id="chat-avatar" class="avatar"></div>
+                            <div class="chat-details">
+                                <span id="chat-name">Chat Name</span>
+                                <span id="chat-status">online</span>
+                            </div>
+                        </div>
+                        <div class="chat-actions">
+                            <button id="btn-chat-info" class="icon-btn" title="Chat Info">ℹ️</button>
+                        </div>
+                    </div>
+
+                    <div id="messages-container" class="messages-container">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <div class="message-input-area">
+                        <button id="btn-attach" class="icon-btn" title="Attach File">📎</button>
+                        <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+                        <button id="btn-send" class="icon-btn send-btn" title="Send">➤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div id="admin-panel" class="hidden">
+                <div class="admin-header">
+                    <button id="btn-close-admin" class="icon-btn">←</button>
+                    <h2>Admin Panel</h2>
+                </div>
+                
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="users">Users</button>
+                    <button class="tab-btn" data-tab="config">Settings</button>
+                    <button class="tab-btn" data-tab="stats">Statistics</button>
+                </div>
+
+                <div id="tab-users" class="tab-content active">
+                    <div class="admin-actions">
+                        <button id="btn-create-user" class="btn-primary">+ Create User</button>
+                        <input type="text" id="search-users" placeholder="Search users...">
+                    </div>
+                    <div id="user-list" class="user-list">
+                        <!-- Users will be loaded here -->
+                    </div>
+                </div>
+
+                <div id="tab-config" class="tab-content">
+                    <div class="config-form">
+                        <label>
+                            <input type="checkbox" id="config-public-registration">
+                            Allow Public Registration
+                        </label>
+                        <label>
+                            <input type="checkbox" id="config-user-group-creation">
+                            Allow Users to Create Groups
+                        </label>
+                        <label>
+                            <input type="checkbox" id="config-keep-history" checked>
+                            Keep Message History by Default
+                        </label>
+                        <button id="btn-save-config" class="btn-primary">Save Settings</button>
+                    </div>
+                </div>
+
+                <div id="tab-stats" class="tab-content">
+                    <div id="server-stats" class="stats-grid">
+                        <!-- Stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Chat Modal -->
+        <div id="new-chat-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>New Chat</h3>
+                    <button id="btn-close-modal" class="icon-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="new-chat-type">
+                        <button id="btn-direct-chat" class="type-btn active">Direct Message</button>
+                        <button id="btn-group-chat" class="type-btn">Group Chat</button>
+                    </div>
+                    
+                    <div id="direct-chat-form">
+                        <input type="text" id="new-chat-username" placeholder="Enter username (e.g., john#example.com)">
+                        <p class="hint">Use format: username#domain</p>
+                    </div>
+                    
+                    <div id="group-chat-form" class="hidden">
+                        <input type="text" id="group-name" placeholder="Group name">
+                        <input type="text" id="group-members" placeholder="Add members (username#domain, comma separated)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-cancel-chat" class="btn-secondary">Cancel</button>
+                    <button id="btn-start-chat" class="btn-primary">Start</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create User Modal -->
+        <div id="create-user-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create User</h3>
+                    <button id="btn-close-user-modal" class="icon-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-user-form">
+                        <input type="text" id="new-user-username" placeholder="Username" required>
+                        <input type="text" id="new-user-display-name" placeholder="Display Name" required>
+                        <input type="password" id="new-user-password" placeholder="Password" required>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="new-user-is-admin">
+                            Admin User
+                        </label>
+                        <button type="submit" class="btn-primary">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/ui/app.js"></script>
+</body>
+</html>

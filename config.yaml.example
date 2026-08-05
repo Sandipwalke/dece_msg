@@ -1,0 +1,35 @@
+# DeceMSG Server Configuration
+# Copy this file to config.yaml and customize as needed
+
+server:
+  domain: "localhost"
+  host: "0.0.0.0"
+  port: 8000
+  title: "DeceMSG Server"
+
+database:
+  type: "sqlite"
+  path: "./data/decemsg.db"
+
+auth:
+  allow_public_registration: false  # Set to true to allow anyone to register
+  allow_user_group_creation: true   # Set to false to restrict group creation to admins only
+  jwt_secret: "change-me-in-production-use-strong-random-key"
+  jwt_expiry_hours: 24
+
+messaging:
+  default_keep_history: true
+  max_file_size_mb: 10
+  allowed_file_types:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".gif"
+    - ".pdf"
+    - ".doc"
+    - ".docx"
+    - ".txt"
+
+federation:
+  enabled: true
+  discovery_mode: "dns"  # dns or registry

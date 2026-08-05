@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "decemsg"
+version = "0.1.0"
+description = "Decentralized messaging platform with federated communication"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "DeceMSG Team", email = "team@decemsg.dev"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "python-multipart>=0.0.6",
+    "websockets>=12.0",
+    "sqlalchemy>=2.0.0",
+    "aiosqlite>=0.19.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.1.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "reflex>=0.4.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+decemsg = "decemsg.main:run_cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["decemsg*"]
+
+[tool.reflex]
+frontend_dir = "decemsg/ui"

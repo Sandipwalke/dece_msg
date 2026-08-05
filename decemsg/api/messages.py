@@ -1,0 +1,360 @@
+"""DeceMSG messages API endpoints."""
+from typing import List, Optional
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
+import aiofiles
+import os
+import uuid
+import mimetypes
+
+from decemsg.core.database import get_db
+from decemsg.core.auth import get_current_user
+from decemsg.core.config import get_config
+from decemsg.core.websocket import manager
+from decemsg.models.user import User
+from decemsg.models.chat import Chat, ChatMember
+from decemsg.models.message import Message, MessageReaction, MessageType
+
+router = APIRouter(prefix="/api", tags=["Messages"])
+
+
+# Request/Response Models
+class MessageCreate(BaseModel):
+    """Message creation request."""
+    content: str = Field(..., min_length=1)
+    message_type: MessageType = MessageType.TEXT
+    reply_to_id: str | None = None
+
+
+class ReactionCreate(BaseModel):
+    """Reaction creation request."""
+    emoji: str = Field(..., min_length=1, max_length=10)
+
+
+class MessageResponse(BaseModel):
+    """Message response model."""
+    id: str
+    chat_id: str
+    sender_id: str | None
+    content: str
+    message_type: str
+    file_url: str | None
+    file_name: str | None
+    file_size: int | None
+    created_at: str | None
+    is_deleted: bool
+    reply_to_id: str | None
+    sender: dict | None
+    reactions: dict = {}
+
+
+@router.get("/chats/{chat_id}/messages", response_model=List[MessageResponse])
+async def get_messages(
+    chat_id: str,
+    limit: int = Query(50, ge=1, le=100),
+    before: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get messages for a chat with pagination."""
+    # Verify user is a member of the chat
+    result = await db.execute(
+        select(Chat)
+        .options(selectinload(Chat.members))
+        .where(Chat.id == chat_id)
+    )
+    chat = result.scalar_one_or_none()
+    
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found"
+        )
+    
+    is_member = any(m.user_id == current_user.id for m in chat.members)
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a member of this chat"
+        )
+    
+    # Build query
+    query = select(Message).options(
+        selectinload(Message.reactions),
+        selectinload(Message.sender)
+    ).where(
+        Message.chat_id == chat_id,
+        Message.is_deleted == False
+    )
+    
+    if before:
+        try:
+            before_dt = datetime.fromisoformat(before)
+            query = query.where(Message.created_at < before_dt)
+        except ValueError:
+            pass
+    
+    query = query.order_by(Message.created_at.desc()).limit(limit)
+    
+    result = await db.execute(query)
+    messages = result.scalars().all()
+    
+    # Reverse to show oldest first
+    messages = list(reversed(messages))
+    
+    return [MessageResponse(**msg.to_dict()) for msg in messages]
+
+
+@router.post("/chats/{chat_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+async def send_message(
+    chat_id: str,
+    message_data: MessageCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Send a message to a chat."""
+    # Verify user is a member of the chat
+    result = await db.execute(
+        select(Chat)
+        .options(selectinload(Chat.members))
+        .where(Chat.id == chat_id)
+    )
+    chat = result.scalar_one_or_none()
+    
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat not found"
+        )
+    
+    is_member = any(m.user_id == current_user.id for m in chat.members)
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a member of this chat"
+        )
+    
+    # Create message
+    message = Message(
+        chat_id=chat_id,
+        sender_id=current_user.id,
+        content=message_data.content,
+        message_type=message_data.message_type,
+        reply_to_id=message_data.reply_to_id,
+    )
+    
+    db.add(message)
+    await db.commit()
+    
+    # Reload message with relationships
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.reactions), selectinload(Message.sender))
+        .where(Message.id == message.id)
+    )
+    message = result.scalar_one()
+    
+    # Prepare response
+    message_dict = message.to_dict()
+    
+    # Broadcast to chat members via WebSocket
+    broadcast_message = {
+        "type": "new_message",
+        "chat_id": chat_id,
+        "message": message_dict
+    }
+    
+    member_ids = [m.user_id for m in chat.members]
+    await manager.broadcast_to_chat(broadcast_message, chat_id, exclude_user=current_user.id)
+    
+    # Also send to sender for confirmation
+    await manager.send_personal_message(broadcast_message, current_user.id)
+    
+    return MessageResponse(**message_dict)
+
+
+@router.post("/messages/{message_id}/reactions", response_model=dict)
+async def add_reaction(
+    message_id: str,
+    reaction_data: ReactionCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a reaction to a message."""
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.reactions), selectinload(Message.chat).selectinload(Chat.members))
+        .where(Message.id == message_id)
+    )
+    message = result.scalar_one_or_none()
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found"
+        )
+    
+    # Check if user is a member of the chat
+    is_member = any(m.user_id == current_user.id for m in message.chat.members)
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a member of this chat"
+        )
+    
+    # Check if user already reacted with this emoji
+    existing = next(
+        (r for r in message.reactions if r.user_id == current_user.id and r.emoji == reaction_data.emoji),
+        None
+    )
+    
+    if existing:
+        return {"message": "Reaction already exists", "emoji": reaction_data.emoji}
+    
+    # Create reaction
+    reaction = MessageReaction(
+        message_id=message_id,
+        user_id=current_user.id,
+        emoji=reaction_data.emoji
+    )
+    db.add(reaction)
+    await db.commit()
+    
+    # Broadcast reaction update
+    reaction_update = {
+        "type": "reaction_update",
+        "chat_id": message.chat_id,
+        "message_id": message_id,
+        "emoji": reaction_data.emoji,
+        "user_id": current_user.id,
+        "action": "add"
+    }
+    await manager.broadcast_to_chat(reaction_update, message.chat_id)
+    
+    return {"message": "Reaction added", "emoji": reaction_data.emoji}
+
+
+@router.delete("/messages/{message_id}/reactions/{emoji}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_reaction(
+    message_id: str,
+    emoji: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Remove a reaction from a message."""
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.reactions), selectinload(Message.chat).selectinload(Chat.members))
+        .where(Message.id == message_id)
+    )
+    message = result.scalar_one_or_none()
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found"
+        )
+    
+    # Find and remove reaction
+    reaction = next(
+        (r for r in message.reactions if r.user_id == current_user.id and r.emoji == emoji),
+        None
+    )
+    
+    if reaction:
+        await db.delete(reaction)
+        await db.commit()
+        
+        # Broadcast reaction update
+        reaction_update = {
+            "type": "reaction_update",
+            "chat_id": message.chat_id,
+            "message_id": message_id,
+            "emoji": emoji,
+            "user_id": current_user.id,
+            "action": "remove"
+        }
+        await manager.broadcast_to_chat(reaction_update, message.chat_id)
+
+
+# File Upload/Download endpoints
+@router.post("/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a file."""
+    config = get_config()
+    
+    # Read file content
+    file_data = await file.read()
+    filename = file.filename or "unknown"
+    
+    # Validate file type
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in config.messaging.allowed_file_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type not allowed. Allowed: {config.messaging.allowed_file_types}"
+        )
+    
+    # Validate file size
+    max_size = config.messaging.max_file_size_mb * 1024 * 1024
+    if len(file_data) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Max size: {config.messaging.max_file_size_mb}MB"
+        )
+    
+    # Generate unique filename
+    unique_filename = f"{uuid.uuid4()}{ext}"
+    upload_dir = "./data/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    file_path = os.path.join(upload_dir, unique_filename)
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        f.write(file_data)
+    
+    # Determine message type
+    message_type = MessageType.IMAGE if ext in [".jpg", ".jpeg", ".png", ".gif"] else MessageType.FILE
+    
+    return {
+        "file_url": f"/api/files/{unique_filename}",
+        "file_name": filename,
+        "file_size": len(file_data),
+        "message_type": message_type.value
+    }
+
+
+@router.get("/files/{filename}")
+async def download_file(
+    filename: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Download a file."""
+    file_path = f"./data/uploads/{filename}"
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found"
+        )
+    
+    # Determine content type
+    content_type, _ = mimetypes.guess_type(file_path)
+    content_type = content_type or "application/octet-stream"
+    
+    return FileResponse(
+        file_path,
+        media_type=content_type,
+        filename=filename
+    )
