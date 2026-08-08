@@ -14,6 +14,8 @@
 
 ## 🎯 What is DeceMSG?
 
+![DeceMSG UI](docs/screenshot.png)
+
 DeceMSG is an open-source, self-hostable messaging platform that enables:
 
 - 💬 **Direct & Group Messaging** - Like WhatsApp, but decentralized
