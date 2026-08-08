@@ -8,9 +8,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, FileResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from decemsg.core.database import init_db, close_db
 from decemsg.core.config import get_config
+from decemsg.core.rate_limiter import limiter, rate_limit_exceeded_handler
 from decemsg.api import (
     auth_router,
     users_router,
@@ -54,6 +57,10 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+    
+    # Add rate limiter
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
     
     # CORS middleware
     app.add_middleware(

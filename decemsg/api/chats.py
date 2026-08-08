@@ -72,7 +72,7 @@ async def list_chats(
             selectinload(ChatMember.chat).selectinload(Chat.messages)
         )
         .where(ChatMember.user_id == current_user.id)
-        .order_by(Chat.created_at.desc())
+        .order_by(ChatMember.joined_at.desc())
     )
     memberships = result.scalars().all()
     

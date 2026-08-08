@@ -2,7 +2,7 @@
 from typing import List, Optional
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,7 @@ import mimetypes
 from decemsg.core.database import get_db
 from decemsg.core.auth import get_current_user
 from decemsg.core.config import get_config
+from decemsg.core.rate_limiter import limiter, get_api_rate_limit
 from decemsg.core.websocket import manager
 from decemsg.models.user import User
 from decemsg.models.chat import Chat, ChatMember
@@ -112,7 +113,9 @@ async def get_messages(
 
 
 @router.post("/chats/{chat_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(get_api_rate_limit())
 async def send_message(
+    request: Request,
     chat_id: str,
     message_data: MessageCreate,
     db: AsyncSession = Depends(get_db),

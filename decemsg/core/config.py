@@ -39,12 +39,20 @@ class FederationConfig(BaseModel):
     discovery_mode: str = "dns"
 
 
+class RateLimitConfig(BaseModel):
+    enabled: bool = True
+    login_rate: str = "5/minute"
+    api_rate: str = "100/minute"
+    burst_size: int = 10
+
+
 class AppConfig(BaseSettings):
     server: ServerConfig = ServerConfig()
     database: DatabaseConfig = DatabaseConfig()
     auth: AuthConfig = AuthConfig()
     messaging: MessagingConfig = MessagingConfig()
     federation: FederationConfig = FederationConfig()
+    rate_limit: RateLimitConfig = RateLimitConfig()
 
     @classmethod
     def load_from_yaml(cls, config_path: str = "config.yaml") -> "AppConfig":
@@ -73,6 +81,7 @@ class AppConfig(BaseSettings):
             "auth": self.auth.model_dump(),
             "messaging": self.messaging.model_dump(),
             "federation": self.federation.model_dump(),
+            "rate_limit": self.rate_limit.model_dump(),
         }
         with open(config_path, "w") as f:
             yaml.dump(data, f, default_flow_style=False)

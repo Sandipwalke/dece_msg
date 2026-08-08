@@ -2,11 +2,13 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from decemsg.core.database import get_db
 from decemsg.core.auth import (
@@ -16,6 +18,7 @@ from decemsg.core.auth import (
     get_current_user,
 )
 from decemsg.core.config import get_config
+from decemsg.core.rate_limiter import limiter, get_login_rate_limit
 from decemsg.models.user import User
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -59,7 +62,9 @@ class UserResponse(BaseModel):
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(get_login_rate_limit())
 async def login(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: AsyncSession = Depends(get_db)
 ):
@@ -96,7 +101,9 @@ async def login(
 
 
 @router.post("/register", response_model=UserResponse)
+@limiter.limit(get_login_rate_limit())
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
