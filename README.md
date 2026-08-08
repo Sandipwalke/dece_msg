@@ -8,7 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue)](https://pages.github.com/)
 
-[🌐 Website](https://Sandipwalke.github.io/dece_msg) | [📖 Documentation](https://Sandipwalke.github.io/dece_msg) | [🐛 Issues](https://github.com/Sandipwalke/dece_msg/issues) | [💬 Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+[🌐 Website](https://sandipwalke.github.io/dece_msg/) | [📖 Documentation](https://sandipwalke.github.io/dece_msg/) | [🐛 Issues](https://github.com/Sandipwalke/dece_msg/issues) | [💬 Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
 
 ---
 
