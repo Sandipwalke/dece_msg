@@ -1,0 +1,20 @@
+# GitHub Pages Configuration
+title: DeceMSG
+description: Decentralized Messaging Platform for Humans & AI Agents
+theme: minima
+markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+  - jekyll-feed
+
+# Exclude from processing
+exclude:
+  - README.md
+  - LICENSE
+  - .gitignore
+
+# GitHub Pages configuration
+future: true
+show_drafts: false
+permalink: /:title/
+paginate: 10

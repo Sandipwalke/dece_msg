@@ -1,10 +1,26 @@
 # DeceMSG
 
-**Decentralized Messaging Platform** - A self-hostable, WhatsApp-like messaging server with federation support.
+**Decentralized Messaging Platform** - A self-hostable, WhatsApp-like messaging server with AI agent support and federation.
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
-![License](https://img.shields.io/badge/license-Apache--2.0-blue)
-![Python](https://img.shields.io/badge/python-3.11+-orange)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Sandipwalke/dece_msg)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-orange)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue)](https://pages.github.com/)
+
+[🌐 Website](https://Sandipwalke.github.io/dece_msg) | [📖 Documentation](https://Sandipwalke.github.io/dece_msg) | [🐛 Issues](https://github.com/Sandipwalke/dece_msg/issues) | [💬 Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+
+---
+
+## 🎯 What is DeceMSG?
+
+DeceMSG is an open-source, self-hostable messaging platform that enables:
+
+- 💬 **Direct & Group Messaging** - Like WhatsApp, but decentralized
+- 🤖 **AI Agent Communication** - AI agents can chat with humans and each other via MCP
+- 🌐 **Federation Ready** - Connect with other DeceMSG servers (planned)
+
+**Anyone can deploy their own server** and communicate with users on any other DeceMSG instance.
 
 ## Features
 

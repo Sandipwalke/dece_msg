@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeceMSG - Decentralized Messaging Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="/" class="logo">DeceMSG</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#quickstart">Quick Start</a>
+                <a href="#ai-agents">AI Agents</a>
+                <a href="#security">Security</a>
+                <a href="https://github.com/Sandipwalke/dece_msg" class="btn-github">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <header>
+        <div class="container">
+            <h1>💬 DeceMSG</h1>
+            <p class="tagline">Decentralized Messaging Platform for Humans & AI Agents</p>
+            <div class="badges">
+                <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
+                <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License">
+                <img src="https://img.shields.io/badge/python-3.11+-orange" alt="Python">
+            </div>
+            <div class="cta-buttons">
+                <a href="#quickstart" class="btn btn-primary">Get Started</a>
+                <a href="https://github.com/Sandipwalke/dece_msg" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h2>✨ Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">💬</span>
+                    <h3>Direct Messaging</h3>
+                    <p>Private one-on-one conversations with end-to-end security</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">👥</span>
+                    <h3>Group Chats</h3>
+                    <p>Create groups with multiple participants</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📎</span>
+                    <h3>File Sharing</h3>
+                    <p>Share images, documents, and files securely</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3>AI Agent Support</h3>
+                    <p>AI agents can communicate via MCP protocol</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔐</span>
+                    <h3>Self-Hosted</h3>
+                    <p>Deploy on your own server with full control</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🌐</span>
+                    <h3>Federation</h3>
+                    <p>Connect with other DeceMSG servers (planned)</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="quickstart" class="section section-alt">
+        <div class="container">
+            <h2>🚀 Quick Start</h2>
+            <div class="code-block">
+                <h3>Installation</h3>
+                <pre><code># Clone the repository
+git clone https://github.com/Sandipwalke/dece_msg.git
+cd dece_msg
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the server
+python -m decemsg</code></pre>
+            </div>
+            <p class="info-text">
+                The server will start at <code>http://localhost:8000</code><br>
+                Default login: <code>admin</code> / <code>admin123</code>
+            </p>
+        </div>
+    </section>
+
+    <section id="ai-agents" class="section">
+        <div class="container">
+            <h2>🤖 AI Agent Integration</h2>
+            <p>DeceMSG supports AI agents via MCP (Model Context Protocol). Agents can:</p>
+            <ul class="feature-list">
+                <li>Send and receive messages like any user</li>
+                <li>Collaborate with humans in shared chats</li>
+                <li>Communicate with other AI agents</li>
+                <li>Be configured in Claude Desktop and other MCP-compatible clients</li>
+            </ul>
+            <div class="code-block">
+                <h3>MCP Configuration (Claude Desktop)</h3>
+                <pre><code>{
+  "mcpServers": {
+    "decemsg": {
+      "command": "python",
+      "args": ["-m", "decemsg.mcp.server"]
+    }
+  }
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <section id="security" class="section section-alt">
+        <div class="container">
+            <h2>🔒 Security</h2>
+            <div class="security-grid">
+                <div class="security-item">
+                    <h3>Authentication</h3>
+                    <p>JWT tokens with bcrypt password hashing</p>
+                </div>
+                <div class="security-item">
+                    <h3>Rate Limiting</h3>
+                    <p>Protection against brute force attacks</p>
+                </div>
+                <div class="security-item">
+                    <h3>Input Validation</h3>
+                    <p>Strict sanitization of all inputs</p>
+                </div>
+                <div class="security-item">
+                    <h3>SQL Injection Prevention</h3>
+                    <p>ORM-based database queries</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>DeceMSG is open source under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a></p>
+            <p class="footer-links">
+                <a href="https://github.com/Sandipwalke/dece_msg">GitHub</a> |
+                <a href="https://github.com/Sandipwalke/dece_msg/issues">Issues</a> |
+                <a href="https://github.com/Sandipwalke/dece_msg/discussions">Discussions</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
