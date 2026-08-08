@@ -64,7 +64,7 @@ DeceMSG is an open-source, self-hostable messaging platform that enables:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/decemsg.git
+git clone https://github.com/Sandipwalke/dece_msg.git
 cd decemsg
 
 # Install dependencies
@@ -395,9 +395,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📖 Documentation: [docs.example.com](https://docs.example.com)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/decemsg/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/decemsg/discussions)
+- 📖 Documentation: [sandipwalke.github.io/dece_msg](https://sandipwalke.github.io/dece_msg)
+- 🐛 Issues: [GitHub Issues](https://github.com/Sandipwalke/dece_msg/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
 
 ---
 
