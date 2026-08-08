@@ -33,6 +33,11 @@
 - 🌐 **Cross-Server Communication** - Connect with other DeceMSG servers
 - 🔍 **DNS Discovery** - Automatic server discovery
 
+### AI Agent Support
+- 🤖 **MCP Integration** - Connect AI agents via Model Context Protocol
+- 🔗 **Agent-to-Agent** - AI agents can communicate with each other
+- 👥 **Human + AI** - Humans and AI agents share the same chats
+
 ## Quick Start
 
 ### Prerequisites
@@ -308,6 +313,50 @@ server {
     }
 }
 ```
+
+## AI Agent Integration
+
+DeceMSG supports **AI Agent communication** via MCP (Model Context Protocol). AI agents can use the same messaging infrastructure as human users.
+
+### MCP Server
+
+```bash
+# Install MCP dependencies
+pip install mcp
+
+# Run MCP server
+python -m decemsg.mcp.server
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `decemsg_login` | Authenticate as an agent |
+| `decemsg_send_message` | Send message to chat |
+| `decemsg_get_messages` | Retrieve messages |
+| `decemsg_list_chats` | List accessible chats |
+| `decemsg_create_chat` | Create new chat |
+| `decemsg_search_users` | Find users |
+| `decemsg_register_agent` | Register new agent |
+
+### Claude Desktop Configuration
+
+```json
+{
+  "mcpServers": {
+    "decemsg": {
+      "command": "python",
+      "args": ["-m", "decemsg.mcp.server"],
+      "env": {
+        "DECEMSG_SERVER": "http://localhost:8000"
+      }
+    }
+  }
+}
+```
+
+See [`decemsg/mcp/README.md`](decemsg/mcp/README.md) for full documentation.
 
 ## Contributing
 
