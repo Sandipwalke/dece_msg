@@ -17,6 +17,7 @@ from decemsg.core.rate_limiter import limiter, rate_limit_exceeded_handler
 from decemsg.api import (
     auth_router,
     users_router,
+    avatars_router,
     chats_router,
     messages_router,
     admin_router,
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(auth_router)
     app.include_router(users_router)
+    app.include_router(avatars_router)
     app.include_router(chats_router)
     app.include_router(messages_router)
     app.include_router(admin_router)

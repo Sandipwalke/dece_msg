@@ -1,8 +1,11 @@
 """DeceMSG users API endpoints."""
+import os
+import uuid
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
@@ -14,6 +17,11 @@ from decemsg.models.user import User
 from decemsg.core.auth import get_password_hash
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
+
+# Avatar settings
+AVATAR_DIR = "./data/avatars"
+AVATAR_MAX_SIZE = 5 * 1024 * 1024  # 5MB
+AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
 
 # Request/Response Models
@@ -301,3 +309,149 @@ async def delete_user(
     
     user.is_active = False
     await db.commit()
+
+
+@router.post("/{user_id}/avatar")
+async def upload_avatar(
+    user_id: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload avatar for a user."""
+    # Check permission: user can only update themselves unless admin
+    if current_user.id != user_id and not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this user's avatar"
+        )
+    
+    # Validate file type
+    if file.content_type not in AVATAR_ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type. Allowed: {AVATAR_ALLOWED_TYPES}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    
+    # Validate file size
+    if len(content) > AVATAR_MAX_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Max size: {AVATAR_MAX_SIZE // (1024*1024)}MB"
+        )
+    
+    # Get user
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Create avatar directory if it doesn't exist
+    os.makedirs(AVATAR_DIR, exist_ok=True)
+    
+    # Delete old avatar if exists
+    if user.avatar_url:
+        old_filename = user.avatar_url.split("/")[-1]
+        old_path = os.path.join(AVATAR_DIR, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+    
+    # Generate unique filename
+    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    filename = f"{user_id}_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = os.path.join(AVATAR_DIR, filename)
+    
+    # Save file
+    with open(filepath, "wb") as f:
+        f.write(content)
+    
+    # Update user avatar_url
+    config = get_config()
+    avatar_url = f"/api/avatars/{filename}"
+    user.avatar_url = avatar_url
+    await db.commit()
+    
+    return {
+        "message": "Avatar uploaded successfully",
+        "avatar_url": avatar_url
+    }
+
+
+@router.delete("/{user_id}/avatar")
+async def delete_avatar(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete user's avatar."""
+    # Check permission
+    if current_user.id != user_id and not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to update this user's avatar"
+        )
+    
+    # Get user
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Delete file if exists
+    if user.avatar_url:
+        filename = user.avatar_url.split("/")[-1]
+        filepath = os.path.join(AVATAR_DIR, filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    
+    # Clear avatar_url
+    user.avatar_url = None
+    await db.commit()
+    
+    return {"message": "Avatar deleted successfully"}
+
+
+# Avatar serving router
+from fastapi import APIRouter as AvatarRouter
+
+avatars_router = AvatarRouter(prefix="/api/avatars", tags=["Avatars"])
+
+
+@avatars_router.get("/{filename}")
+async def get_avatar(filename: str):
+    """Serve avatar images."""
+    filepath = os.path.join(AVATAR_DIR, filename)
+    
+    if not os.path.exists(filepath):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Avatar not found"
+        )
+    
+    # Determine content type
+    ext = filename.split(".")[-1].lower()
+    content_types = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "gif": "image/gif",
+        "webp": "image/webp"
+    }
+    content_type = content_types.get(ext, "application/octet-stream")
+    
+    return FileResponse(
+        filepath,
+        media_type=content_type,
+        filename=filename
+    )
