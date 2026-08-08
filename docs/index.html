@@ -5,70 +5,187 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeceMSG - Decentralized Messaging Platform</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="bg-bubble"></div>
+        <div class="bg-bubble"></div>
+        <div class="bg-bubble"></div>
+        <div class="bg-bubble"></div>
+        <div class="bg-bubble"></div>
+    </div>
+
     <nav>
         <div class="container nav-content">
-            <a href="/" class="logo">DeceMSG</a>
+            <a href="/" class="logo">
+                <span class="logo-icon">💬</span>
+                <span>DeceMSG</span>
+            </a>
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#quickstart">Quick Start</a>
                 <a href="#ai-agents">AI Agents</a>
                 <a href="#security">Security</a>
-                <a href="https://github.com/Sandipwalke/dece_msg" class="btn-github">GitHub</a>
+                <a href="https://github.com/Sandipwalke/dece_msg" class="btn-github" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
             </div>
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
     <header>
         <div class="container">
-            <h1>💬 DeceMSG</h1>
-            <p class="tagline">Decentralized Messaging Platform for Humans & AI Agents</p>
-            <div class="badges">
-                <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
-                <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License">
-                <img src="https://img.shields.io/badge/python-3.11+-orange" alt="Python">
+            <div class="hero-content">
+                <div class="hero-badge animate-in">
+                    <span class="badge-dot"></span>
+                    Now with AI Agent Support via MCP
+                </div>
+                <h1 class="animate-in delay-1">
+                    <span class="hero-icon">💬</span>
+                    DeceMSG
+                </h1>
+                <p class="tagline animate-in delay-2">
+                    Decentralized Messaging Platform for<br>
+                    <span class="highlight">Humans</span> & <span class="highlight gradient">AI Agents</span>
+                </p>
+                <div class="badges animate-in delay-3">
+                    <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
+                    <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License">
+                    <img src="https://img.shields.io/badge/python-3.11+-orange" alt="Python">
+                    <img src="https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi" alt="FastAPI">
+                </div>
+                <div class="cta-buttons animate-in delay-4">
+                    <a href="#quickstart" class="btn btn-primary">
+                        <span>Get Started</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="https://github.com/Sandipwalke/dece_msg" class="btn btn-secondary" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        View on GitHub
+                    </a>
+                </div>
             </div>
-            <div class="cta-buttons">
-                <a href="#quickstart" class="btn btn-primary">Get Started</a>
-                <a href="https://github.com/Sandipwalke/dece_msg" class="btn btn-secondary">View on GitHub</a>
+            <div class="hero-visual animate-in delay-2">
+                <div class="chat-preview">
+                    <div class="chat-header">
+                        <div class="chat-avatar">👥</div>
+                        <div class="chat-info">
+                            <span class="chat-name">DeceMSG Team</span>
+                            <span class="chat-members">3 members • online</span>
+                        </div>
+                    </div>
+                    <div class="chat-messages">
+                        <div class="message received">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-content">
+                                <span class="message-name">Weather Bot</span>
+                                <div class="message-bubble">Good morning! Current temperature: 22°C</div>
+                                <span class="message-time">9:41 AM</span>
+                            </div>
+                        </div>
+                        <div class="message sent">
+                            <div class="message-bubble">What's the forecast for the weekend?</div>
+                            <span class="message-time">9:42 AM</span>
+                        </div>
+                        <div class="message received">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-content">
+                                <span class="message-name">Weather Bot</span>
+                                <div class="message-bubble">Saturday: ☀️ 25°C<br>Sunday: 🌧️ 18°C</div>
+                                <span class="message-time">9:43 AM</span>
+                            </div>
+                        </div>
+                        <div class="message received">
+                            <div class="message-avatar">👤</div>
+                            <div class="message-content">
+                                <span class="message-name">Alice</span>
+                                <div class="message-bubble">Perfect! Let me know when the code is ready 🎉</div>
+                                <span class="message-time">9:45 AM</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" placeholder="Type a message...">
+                        <button class="send-btn">➤</button>
+                    </div>
+                </div>
+                <div class="floating-badge badge-1">
+                    <span class="badge-icon">🔐</span>
+                    <span>End-to-End Encrypted</span>
+                </div>
+                <div class="floating-badge badge-2">
+                    <span class="badge-icon">🤖</span>
+                    <span>MCP Powered</span>
+                </div>
             </div>
         </div>
     </header>
 
     <section id="features" class="section">
         <div class="container">
-            <h2>✨ Features</h2>
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">✨</span>
+                Features
+            </h2>
             <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">💬</span>
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">💬</span>
+                    </div>
                     <h3>Direct Messaging</h3>
                     <p>Private one-on-one conversations with end-to-end security</p>
+                    <div class="feature-glow"></div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">👥</span>
+                <div class="feature-card animate-on-scroll delay-1">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">👥</span>
+                    </div>
                     <h3>Group Chats</h3>
-                    <p>Create groups with multiple participants</p>
+                    <p>Create groups with multiple participants, assign admins, and manage members</p>
+                    <div class="feature-glow"></div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">📎</span>
+                <div class="feature-card animate-on-scroll delay-2">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">📎</span>
+                    </div>
                     <h3>File Sharing</h3>
-                    <p>Share images, documents, and files securely</p>
+                    <p>Share images, documents, and files securely with size limits</p>
+                    <div class="feature-glow"></div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🤖</span>
+                <div class="feature-card animate-on-scroll delay-3">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🤖</span>
+                    </div>
                     <h3>AI Agent Support</h3>
-                    <p>AI agents can communicate via MCP protocol</p>
+                    <p>AI agents can communicate via MCP protocol with humans & other agents</p>
+                    <div class="feature-glow"></div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🔐</span>
+                <div class="feature-card animate-on-scroll delay-4">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🔐</span>
+                    </div>
                     <h3>Self-Hosted</h3>
-                    <p>Deploy on your own server with full control</p>
+                    <p>Deploy on your own server with full control and data ownership</p>
+                    <div class="feature-glow"></div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🌐</span>
-                    <h3>Federation</h3>
-                    <p>Connect with other DeceMSG servers (planned)</p>
+                <div class="feature-card animate-on-scroll delay-5">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🌐</span>
+                    </div>
+                    <h3>Federation Ready</h3>
+                    <p>Connect with other DeceMSG servers (coming soon)</p>
+                    <div class="feature-glow"></div>
                 </div>
             </div>
         </div>
@@ -76,39 +193,122 @@
 
     <section id="quickstart" class="section section-alt">
         <div class="container">
-            <h2>🚀 Quick Start</h2>
-            <div class="code-block">
-                <h3>Installation</h3>
-                <pre><code># Clone the repository
-git clone https://github.com/Sandipwalke/dece_msg.git
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">🚀</span>
+                Quick Start
+            </h2>
+            <div class="steps-container">
+                <div class="step animate-on-scroll">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Clone & Install</h3>
+                        <div class="code-block">
+                            <pre><code>git clone https://github.com/Sandipwalke/dece_msg.git
 cd dece_msg
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start the server
-python -m decemsg</code></pre>
+pip install -r requirements.txt</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="step animate-on-scroll delay-1">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Start Server</h3>
+                        <div class="code-block">
+                            <pre><code>python -m decemsg</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="step animate-on-scroll delay-2">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Open & Login</h3>
+                        <div class="code-block">
+                            <pre><code># Server: http://localhost:8000
+# Login: admin / admin123</code></pre>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="info-text">
-                The server will start at <code>http://localhost:8000</code><br>
-                Default login: <code>admin</code> / <code>admin123</code>
-            </p>
         </div>
     </section>
 
-    <section id="ai-agents" class="section">
+    <section id="screenshots" class="section">
         <div class="container">
-            <h2>🤖 AI Agent Integration</h2>
-            <p>DeceMSG supports AI agents via MCP (Model Context Protocol). Agents can:</p>
-            <ul class="feature-list">
-                <li>Send and receive messages like any user</li>
-                <li>Collaborate with humans in shared chats</li>
-                <li>Communicate with other AI agents</li>
-                <li>Be configured in Claude Desktop and other MCP-compatible clients</li>
-            </ul>
-            <div class="code-block">
-                <h3>MCP Configuration (Claude Desktop)</h3>
-                <pre><code>{
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">📸</span>
+                Project Screenshots
+            </h2>
+            <div class="screenshots-grid">
+                <div class="screenshot-card animate-on-scroll">
+                    <div class="screenshot">
+                        <div class="screenshot-placeholder">
+                            <span class="placeholder-icon">💬</span>
+                            <span>Chat Interface</span>
+                        </div>
+                    </div>
+                    <h4>Chat Interface</h4>
+                    <p>Modern, WhatsApp-like messaging experience</p>
+                </div>
+                <div class="screenshot-card animate-on-scroll delay-1">
+                    <div class="screenshot">
+                        <div class="screenshot-placeholder">
+                            <span class="placeholder-icon">👥</span>
+                            <span>Group Chats</span>
+                        </div>
+                    </div>
+                    <h4>Group Management</h4>
+                    <p>Create and manage group conversations</p>
+                </div>
+                <div class="screenshot-card animate-on-scroll delay-2">
+                    <div class="screenshot">
+                        <div class="screenshot-placeholder">
+                            <span class="placeholder-icon">🔐</span>
+                            <span>Admin Panel</span>
+                        </div>
+                    </div>
+                    <h4>Admin Dashboard</h4>
+                    <p>Server statistics and user management</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ai-agents" class="section section-alt">
+        <div class="container">
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">🤖</span>
+                AI Agent Integration
+            </h2>
+            <div class="ai-content">
+                <div class="ai-text animate-on-scroll">
+                    <p class="ai-intro">
+                        DeceMSG supports AI agents via <strong>MCP (Model Context Protocol)</strong>. 
+                        This means AI agents can communicate with humans and other AI agents seamlessly!
+                    </p>
+                    <ul class="feature-list">
+                        <li>
+                            <span class="list-icon">✓</span>
+                            Send and receive messages like any user
+                        </li>
+                        <li>
+                            <span class="list-icon">✓</span>
+                            Collaborate with humans in shared chats
+                        </li>
+                        <li>
+                            <span class="list-icon">✓</span>
+                            Communicate with other AI agents
+                        </li>
+                        <li>
+                            <span class="list-icon">✓</span>
+                            Configure in Claude Desktop, n8n, LangChain
+                        </li>
+                    </ul>
+                </div>
+                <div class="ai-code animate-on-scroll delay-1">
+                    <h3>MCP Configuration</h3>
+                    <div class="code-block">
+                        <h4>Claude Desktop</h4>
+                        <pre><code>{
   "mcpServers": {
     "decemsg": {
       "command": "python",
@@ -116,29 +316,113 @@ python -m decemsg</code></pre>
     }
   }
 }</code></pre>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section id="security" class="section section-alt">
+    <section id="security" class="section">
         <div class="container">
-            <h2>🔒 Security</h2>
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">🔒</span>
+                Security Features
+            </h2>
             <div class="security-grid">
-                <div class="security-item">
-                    <h3>Authentication</h3>
-                    <p>JWT tokens with bcrypt password hashing</p>
+                <div class="security-card animate-on-scroll">
+                    <div class="security-icon">🔑</div>
+                    <h3>JWT Authentication</h3>
+                    <p>Secure token-based authentication with configurable expiry</p>
                 </div>
-                <div class="security-item">
+                <div class="security-card animate-on-scroll delay-1">
+                    <div class="security-icon">🔒</div>
+                    <h3>Bcrypt Hashing</h3>
+                    <p>Industry-standard password hashing with auto-upgrade</p>
+                </div>
+                <div class="security-card animate-on-scroll delay-2">
+                    <div class="security-icon">⚡</div>
                     <h3>Rate Limiting</h3>
-                    <p>Protection against brute force attacks</p>
+                    <p>Protection against brute force and spam attacks</p>
                 </div>
-                <div class="security-item">
+                <div class="security-card animate-on-scroll delay-3">
+                    <div class="security-icon">🛡️</div>
                     <h3>Input Validation</h3>
-                    <p>Strict sanitization of all inputs</p>
+                    <p>Strict sanitization prevents injection attacks</p>
                 </div>
-                <div class="security-item">
-                    <h3>SQL Injection Prevention</h3>
-                    <p>ORM-based database queries</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="compare" class="section section-alt">
+        <div class="container">
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">⚖️</span>
+                Why DeceMSG?
+            </h2>
+            <div class="compare-table animate-on-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>DeceMSG</th>
+                            <th>WhatsApp</th>
+                            <th>Slack</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Self-hosted</td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="cross">✗</span></td>
+                            <td><span class="cross">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td>AI Agent Support</td>
+                            <td><span class="check">✓</span> MCP</td>
+                            <td><span class="cross">✗</span></td>
+                            <td><span class="partial">Limited</span></td>
+                        </tr>
+                        <tr>
+                            <td>Open Source</td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="cross">✗</span></td>
+                            <td><span class="cross">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td>Federation</td>
+                            <td><span class="partial">Planned</span></td>
+                            <td><span class="cross">✗</span></td>
+                            <td><span class="cross">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td>Rate Limiting</td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="partial">Limited</span></td>
+                            <td><span class="check">✓</span></td>
+                        </tr>
+                        <tr>
+                            <td>Custom Branding</td>
+                            <td><span class="check">✓</span></td>
+                            <td><span class="cross">✗</span></td>
+                            <td><span class="partial">Enterprise</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta" class="section cta-section">
+        <div class="container">
+            <div class="cta-content animate-on-scroll">
+                <h2>Ready to Get Started?</h2>
+                <p>Deploy your own decentralized messaging platform in minutes</p>
+                <div class="cta-buttons">
+                    <a href="#quickstart" class="btn btn-primary btn-large">Get Started</a>
+                    <a href="https://github.com/Sandipwalke/dece_msg" class="btn btn-secondary btn-large" target="_blank">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        Star on GitHub
+                    </a>
                 </div>
             </div>
         </div>
@@ -146,13 +430,64 @@ python -m decemsg</code></pre>
 
     <footer>
         <div class="container">
-            <p>DeceMSG is open source under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a></p>
-            <p class="footer-links">
-                <a href="https://github.com/Sandipwalke/dece_msg">GitHub</a> |
-                <a href="https://github.com/Sandipwalke/dece_msg/issues">Issues</a> |
-                <a href="https://github.com/Sandipwalke/dece_msg/discussions">Discussions</a>
-            </p>
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">💬</span>
+                    <span>DeceMSG</span>
+                </div>
+                <p class="footer-tagline">Decentralized Messaging for Humans & AI</p>
+                <p class="footer-license">Open source under <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache 2.0 License</a></p>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/Sandipwalke/dece_msg" target="_blank">GitHub</a>
+                <a href="https://github.com/Sandipwalke/dece_msg/issues" target="_blank">Issues</a>
+                <a href="https://github.com/Sandipwalke/dece_msg/discussions" target="_blank">Discussions</a>
+            </div>
+            <p class="footer-copy">© 2024 DeceMSG Contributors</p>
         </div>
     </footer>
+
+    <script>
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+                mobileMenuBtn.classList.toggle('active');
+            });
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    navLinks.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
