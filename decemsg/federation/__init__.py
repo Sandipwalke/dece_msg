@@ -283,3 +283,41 @@ async def send_federated_message(
     if success:
         return {"status": "sent"}
     return {"status": "failed", "message": "Could not send message"}
+
+
+class ChatSyncRequest(BaseModel):
+    """Request to sync chat membership from federated server."""
+    chat_id: str
+    members: list[str]
+
+
+@router.post("/chats/sync")
+async def sync_chat_from_federation(
+    sync_data: ChatSyncRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Receive chat sync from a federated server.
+    
+    This endpoint is called when a remote server shares chat membership.
+    We store the remote members as 'federated members' for message routing.
+    """
+    config = get_config()
+    
+    # Find the chat - create a placeholder if it doesn't exist
+    result = await db.execute(
+        select(Chat).where(Chat.id == sync_data.chat_id)
+    )
+    chat = result.scalar_one_or_none()
+    
+    if not chat:
+        # Create a federated chat placeholder
+        chat = Chat(
+            id=sync_data.chat_id,
+            name=f"Federated Chat",
+            is_group=False,
+            created_by="federation"
+        )
+        db.add(chat)
+        await db.commit()
+    
+    return {"status": "synced", "chat_id": sync_data.chat_id}

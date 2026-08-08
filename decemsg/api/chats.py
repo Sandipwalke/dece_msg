@@ -1,5 +1,5 @@
 """DeceMSG chats API endpoints."""
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -14,6 +14,7 @@ from decemsg.core.config import get_config
 from decemsg.core.websocket import manager
 from decemsg.models.user import User
 from decemsg.models.chat import Chat, ChatMember, ChatType, MemberRole
+from decemsg.federation.federation_client import is_federated_user, get_user_domain, parse_user_id
 
 router = APIRouter(prefix="/api/chats", tags=["Chats"])
 
@@ -205,14 +206,31 @@ async def create_chat(
                     unread_count=0
                 )
         
-        # Verify other user exists
-        other_user_result = await db.execute(select(User).where(User.id == other_user_id))
-        other_user = other_user_result.scalar_one_or_none()
-        if not other_user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Recipient user not found"
-            )
+        # Verify other user exists (local or federated)
+        other_user: Optional[User] = None
+        other_username: Optional[str] = None
+        other_domain: Optional[str] = None
+        other_display_name: Optional[str] = None
+        
+        if is_federated_user(other_user_id):
+            # Federated user - parse the ID and look up on remote server
+            other_username, other_domain = parse_user_id(other_user_id)
+            other_display_name = other_username
+            
+            # Try to look up the user on the federated server
+            from decemsg.federation.federation_client import lookup_federated_user
+            federated_user = await lookup_federated_user(other_username, other_domain)
+            if federated_user:
+                other_display_name = federated_user.get("display_name", other_username)
+        else:
+            # Local user - verify exists in DB
+            other_user_result = await db.execute(select(User).where(User.id == other_user_id))
+            other_user = other_user_result.scalar_one_or_none()
+            if not other_user:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Recipient user not found"
+                )
     
     # Determine keep_history setting
     keep_history = chat_data.keep_history if chat_data.keep_history is not None else config.messaging.default_keep_history
@@ -257,6 +275,15 @@ async def create_chat(
             role=MemberRole.MEMBER
         )
         db.add(other_membership)
+        
+        # If this is a federated chat, sync with remote server
+        if is_federated_user(other_user_id) and other_domain:
+            from decemsg.federation.federation_client import sync_chat_members
+            await sync_chat_members(
+                chat_id=chat.id,
+                local_members=[current_user.id],
+                remote_domains=[other_domain]
+            )
     
     await db.commit()
     

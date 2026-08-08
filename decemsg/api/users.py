@@ -172,7 +172,39 @@ async def search_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Search for users by username or display name."""
+    """Search for users by username or display name.
+    
+    Supports federated user lookup with username#domain format.
+    """
+    results = []
+    config = get_config()
+    
+    # Check if this is a federated user lookup (username#domain)
+    if '#' in q:
+        parts = q.split('#', 1)
+        username, domain = parts[0], parts[1]
+        
+        # Don't search for local domain
+        if domain != config.server.domain:
+            # Try to look up on federated server
+            from decemsg.federation.federation_client import lookup_federated_user
+            federated_user = await lookup_federated_user(username, domain)
+            
+            if federated_user:
+                results.append({
+                    "id": f"{username}#{domain}",
+                    "username": federated_user.get("username", username),
+                    "display_name": federated_user.get("display_name", username),
+                    "domain": domain,
+                    "avatar_url": federated_user.get("avatar_url"),
+                    "created_at": None,
+                    "last_seen": None,
+                    "is_active": True,
+                    "is_admin": False,
+                    "is_federated": True
+                })
+    
+    # Also search local users
     result = await db.execute(
         select(User).where(
             User.is_active == True,
@@ -182,10 +214,10 @@ async def search_users(
             )
         ).limit(20)
     )
-    users = result.scalars().all()
+    local_users = result.scalars().all()
     
-    return [
-        UserResponse(
+    for u in local_users:
+        results.append(UserResponse(
             id=u.id,
             username=u.username,
             display_name=u.display_name,
@@ -195,9 +227,9 @@ async def search_users(
             last_seen=u.last_seen.isoformat() if u.last_seen else None,
             is_active=u.is_active,
             is_admin=u.is_admin,
-        )
-        for u in users
-    ]
+        ))
+    
+    return results
 
 
 @router.get("/{user_id}", response_model=UserResponse)

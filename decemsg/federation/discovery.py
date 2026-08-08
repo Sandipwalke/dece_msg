@@ -203,6 +203,36 @@ class FederationClient:
         except Exception:
             return False
 
+    async def sync_chat(
+        self,
+        chat_id: str,
+        member_ids: list[str],
+        domain: str
+    ) -> bool:
+        """Sync chat membership with a federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/chats/sync",
+                    json={
+                        "chat_id": chat_id,
+                        "members": member_ids
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Chat sync failed: {e}")
+
+        return False
+
 
 # Global federation client instance
 _federation_client: Optional[FederationClient] = None

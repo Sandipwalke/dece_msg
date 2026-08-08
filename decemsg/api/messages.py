@@ -21,6 +21,7 @@ from decemsg.core.websocket import manager
 from decemsg.models.user import User
 from decemsg.models.chat import Chat, ChatMember
 from decemsg.models.message import Message, MessageReaction, MessageType
+from decemsg.federation.federation_client import is_federated_user, parse_user_id
 
 router = APIRouter(prefix="/api", tags=["Messages"])
 
@@ -178,6 +179,21 @@ async def send_message(
     
     # Also send to sender for confirmation
     await manager.send_personal_message(broadcast_message, current_user.id)
+    
+    # Route to federated members if any
+    for member in chat.members:
+        if member.user_id != current_user.id and is_federated_user(member.user_id):
+            from_username, from_domain = parse_user_id(current_user.id)
+            to_username, to_domain = parse_user_id(member.user_id)
+            config = get_config()
+            
+            from decemsg.federation.federation_client import route_message
+            await route_message(
+                from_user=current_user.id,
+                to_user=member.user_id,
+                content=message_data.content,
+                message_type=message_data.message_type.value
+            )
     
     return MessageResponse(**message_dict)
 
