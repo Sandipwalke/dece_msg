@@ -179,3 +179,153 @@ async def sync_chat_members(
             results["success"] = False
     
     return results
+
+
+async def sync_group_chat(
+    chat_id: str,
+    name: str,
+    members: list[str],
+    created_by: str
+) -> dict:
+    """Sync a group chat across federated servers."""
+    config = get_config()
+    results = {"success": True, "synced_domains": [], "failed_domains": []}
+    
+    # Get unique domains from members
+    domains = set()
+    for member in members:
+        _, domain = parse_user_id(member)
+        if domain and domain != config.server.domain:
+            domains.add(domain)
+    
+    for domain in domains:
+        try:
+            client = get_federation_client()
+            success = await client.sync_group_chat(chat_id, name, members, created_by, domain)
+            
+            if success:
+                results["synced_domains"].append(domain)
+            else:
+                results["failed_domains"].append(domain)
+                results["success"] = False
+        except Exception as e:
+            logger.error(f"Error syncing group {chat_id} with {domain}: {e}")
+            results["failed_domains"].append(domain)
+            results["success"] = False
+    
+    return results
+
+
+async def send_message_update(
+    message_id: str,
+    chat_id: str,
+    content: str
+) -> dict:
+    """Send a message edit to federated chat members."""
+    config = get_config()
+    results = {"success": True, "failed_domains": []}
+    
+    # Get chat members
+    from decemsg.core.database import get_db
+    from sqlalchemy import select
+    from decemsg.models.chat import Chat, ChatMember
+    
+    async for db in get_db():
+        result = await db.execute(
+            select(ChatMember).where(ChatMember.chat_id == chat_id)
+        )
+        members = result.scalars().all()
+        
+        for member in members:
+            if is_federated_user(member.user_id):
+                _, domain = parse_user_id(member.user_id)
+                try:
+                    client = get_federation_client()
+                    success = await client.send_message_update(
+                        message_id, chat_id, content, domain
+                    )
+                    if not success:
+                        results["failed_domains"].append(domain)
+                        results["success"] = False
+                except Exception as e:
+                    logger.error(f"Error sending message update: {e}")
+                    results["failed_domains"].append(domain)
+                    results["success"] = False
+        break
+    
+    return results
+
+
+async def send_message_delete(
+    message_id: str,
+    chat_id: str
+) -> dict:
+    """Send a message delete to federated chat members."""
+    config = get_config()
+    results = {"success": True, "failed_domains": []}
+    
+    from decemsg.core.database import get_db
+    from sqlalchemy import select
+    from decemsg.models.chat import Chat, ChatMember
+    
+    async for db in get_db():
+        result = await db.execute(
+            select(ChatMember).where(ChatMember.chat_id == chat_id)
+        )
+        members = result.scalars().all()
+        
+        for member in members:
+            if is_federated_user(member.user_id):
+                _, domain = parse_user_id(member.user_id)
+                try:
+                    client = get_federation_client()
+                    success = await client.send_message_delete(
+                        message_id, chat_id, domain
+                    )
+                    if not success:
+                        results["failed_domains"].append(domain)
+                        results["success"] = False
+                except Exception as e:
+                    logger.error(f"Error sending message delete: {e}")
+                    results["failed_domains"].append(domain)
+                    results["success"] = False
+        break
+    
+    return results
+
+
+async def send_typing_indicator(
+    chat_id: str,
+    user_id: str,
+    is_typing: bool
+) -> dict:
+    """Send typing indicator to federated chat members."""
+    config = get_config()
+    results = {"success": True, "failed_domains": []}
+    
+    from decemsg.core.database import get_db
+    from sqlalchemy import select
+    from decemsg.models.chat import Chat, ChatMember
+    
+    async for db in get_db():
+        result = await db.execute(
+            select(ChatMember).where(ChatMember.chat_id == chat_id)
+        )
+        members = result.scalars().all()
+        
+        for member in members:
+            if is_federated_user(member.user_id):
+                _, domain = parse_user_id(member.user_id)
+                try:
+                    client = get_federation_client()
+                    success = await client.send_typing_indicator(
+                        chat_id, user_id, is_typing, domain
+                    )
+                    if not success:
+                        results["failed_domains"].append(domain)
+                except Exception as e:
+                    logger.error(f"Error sending typing indicator: {e}")
+                    results["failed_domains"].append(domain)
+        break
+    
+    return results

@@ -90,7 +90,8 @@ class AppConfig(BaseSettings):
 @lru_cache()
 def get_config() -> AppConfig:
     """Get cached configuration instance."""
-    return AppConfig.load_from_yaml()
+    config_path = os.environ.get("DECEMSG_CONFIG", "config.yaml")
+    return AppConfig.load_from_yaml(config_path)
 
 
 def reset_config():

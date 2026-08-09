@@ -64,7 +64,10 @@ async def get_messages(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get messages for a chat with pagination."""
+    """Get messages for a chat with pagination.
+    
+    Also marks undelivered messages as read and sends receipts to federated senders.
+    """
     # Verify user is a member of the chat
     result = await db.execute(
         select(Chat)
@@ -110,7 +113,65 @@ async def get_messages(
     # Reverse to show oldest first
     messages = list(reversed(messages))
     
+    # Send delivery/read receipts for federated messages
+    asyncio.create_task(
+        _send_receipts_for_messages(messages, chat_id, current_user.id, db)
+    )
+    
     return [MessageResponse(**msg.to_dict()) for msg in messages]
+
+
+async def _send_receipts_for_messages(
+    messages: list,
+    chat_id: str,
+    current_user_id: str,
+    db: AsyncSession
+):
+    """Send delivery/read receipts for federated messages."""
+    from datetime import datetime
+    from decemsg.federation.federation_client import is_federated_user, parse_user_id, get_federation_client
+    
+    receipts_to_send = []
+    
+    for message in messages:
+        # Only send receipts for messages from federated users
+        if is_federated_user(message.sender_id) and not message.is_read:
+            message.is_read = True
+            message.read_at = datetime.utcnow()
+            receipts_to_send.append(message)
+    
+    if receipts_to_send:
+        await db.commit()
+        
+        # Send receipts to federated servers
+        for message in receipts_to_send:
+            try:
+                client = get_federation_client()
+                username, domain = parse_user_id(message.sender_id)
+                
+                if domain:
+                    receipt = {
+                        "message_id": message.id,
+                        "chat_id": chat_id,
+                        "status": "read",
+                        "user_id": current_user_id,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                    
+                    server_info = await client.discover_server(domain)
+                    if server_info:
+                        import httpx
+                        async with httpx.AsyncClient(timeout=10.0) as http_client:
+                            try:
+                                await http_client.post(
+                                    f"{server_info.api_url}/federation/receipts",
+                                    json=receipt,
+                                    headers={"Content-Type": "application/json"}
+                                )
+                            except Exception:
+                                pass
+            except Exception as e:
+                print(f"Error sending read receipt: {e}")
 
 
 @router.post("/chats/{chat_id}/messages", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -188,12 +249,14 @@ async def send_message(
             config = get_config()
             
             from decemsg.federation.federation_client import route_message
-            await route_message(
+            result = await route_message(
                 from_user=current_user.id,
                 to_user=member.user_id,
                 content=message_data.content,
                 message_type=message_data.message_type.value
             )
+            if result:
+                logger.info(f"Federated message sent from {from_username}@{from_domain} to {to_username}@{to_domain}")
     
     return MessageResponse(**message_dict)
 

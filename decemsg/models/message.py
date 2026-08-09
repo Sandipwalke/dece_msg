@@ -62,6 +62,20 @@ class Message(Base):
         nullable=True
     )
     
+    # Delivery status
+    is_delivered: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    is_read: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+    read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    
     # Relationships
     chat: Mapped["Chat"] = relationship("Chat", back_populates="messages")
     sender: Mapped["User"] = relationship(
@@ -95,6 +109,10 @@ class Message(Base):
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "is_deleted": self.is_deleted,
             "reply_to_id": self.reply_to_id,
+            "is_delivered": self.is_delivered,
+            "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
+            "is_read": self.is_read,
+            "read_at": self.read_at.isoformat() if self.read_at else None,
         }
         
         if include_reactions:

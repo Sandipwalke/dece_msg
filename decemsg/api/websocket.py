@@ -63,6 +63,13 @@ async def websocket_endpoint(websocket: WebSocket):
     # Broadcast online status
     await manager.broadcast_online_status(user_id, True)
     
+    # Deliver any pending offline messages
+    try:
+        from decemsg.federation.offline_queue import notify_user_online
+        await notify_user_online(user_id)
+    except Exception as e:
+        print(f"Error delivering offline messages: {e}")
+    
     try:
         while True:
             # Receive message
@@ -129,6 +136,13 @@ async def websocket_endpoint(websocket: WebSocket):
                         "timestamp": datetime.utcnow().isoformat()
                     }
                     await manager.broadcast_to_chat(typing_message, chat_id, exclude_user=user_id)
+                    
+                    # Also send to federated users
+                    try:
+                        from decemsg.federation.federation_client import send_typing_indicator
+                        await send_typing_indicator(chat_id, user_id, is_typing)
+                    except Exception:
+                        pass
             
             elif message_type == "read":
                 # Mark messages as read

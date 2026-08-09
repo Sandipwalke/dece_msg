@@ -28,6 +28,7 @@
             </a>
             <div class="nav-links">
                 <a href="#features">Features</a>
+                <a href="#federation">Federation</a>
                 <a href="#quickstart">Quick Start</a>
                 <a href="#ai-agents">AI Agents</a>
                 <a href="#support">Support</a>
@@ -184,7 +185,7 @@
                         <span class="feature-icon">🌐</span>
                     </div>
                     <h3>Federation Ready</h3>
-                    <p>Connect with other DeceMSG servers (coming soon)</p>
+                    <p>Cross-server messaging via ActivityPub, WebFinger, DNS SRV discovery</p>
                     <div class="feature-glow"></div>
                 </div>
             </div>
@@ -268,6 +269,59 @@ pip install -r requirements.txt</code></pre>
                     </div>
                     <h4>Admin Dashboard</h4>
                     <p>Server statistics and user management</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="federation" class="section">
+        <div class="container">
+            <h2 class="section-title animate-on-scroll">
+                <span class="title-icon">🌐</span>
+                Federation
+            </h2>
+            <div class="features-grid">
+                <div class="feature-card animate-on-scroll">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">📡</span>
+                    </div>
+                    <h3>ActivityPub</h3>
+                    <p>Full AS2 inbox/outbox implementation for decentralized social networking</p>
+                </div>
+                <div class="feature-card animate-on-scroll delay-1">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🔍</span>
+                    </div>
+                    <h3>Discovery</h3>
+                    <p>WebFinger & DNS SRV record discovery for seamless server finding</p>
+                </div>
+                <div class="feature-card animate-on-scroll delay-2">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🔐</span>
+                    </div>
+                    <h3>Server Auth</h3>
+                    <p>ECDSA request signing between servers for secure communication</p>
+                </div>
+                <div class="feature-card animate-on-scroll delay-3">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">📤</span>
+                    </div>
+                    <h3>Offline Queue</h3>
+                    <p>Messages queued for offline recipients, delivered when online</p>
+                </div>
+                <div class="feature-card animate-on-scroll delay-4">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🔄</span>
+                    </div>
+                    <h3>User Migration</h3>
+                    <p>Transfer accounts between servers with full data export/import</p>
+                </div>
+                <div class="feature-card animate-on-scroll delay-5">
+                    <div class="feature-icon-wrapper">
+                        <span class="feature-icon">🛡️</span>
+                    </div>
+                    <h3>Spam Protection</h3>
+                    <p>Content filtering, server reputation, and block lists</p>
                 </div>
             </div>
         </div>
@@ -390,7 +444,7 @@ pip install -r requirements.txt</code></pre>
                         </tr>
                         <tr>
                             <td>Federation</td>
-                            <td><span class="partial">Planned</span></td>
+                            <td><span class="check">✓</span> Implemented</td>
                             <td><span class="cross">✗</span></td>
                             <td><span class="cross">✗</span></td>
                         </tr>

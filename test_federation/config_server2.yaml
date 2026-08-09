@@ -1,0 +1,31 @@
+server:
+  domain: server2.local
+  host: 0.0.0.0
+  port: 8001
+  title: DeceMSG Server 2
+
+auth:
+  allow_public_registration: true
+  allow_user_group_creation: true
+  jwt_expiry_hours: 24
+  jwt_secret: server2_secret_key_67890
+
+database:
+  path: ./test_federation/data_server2/decemsg.db
+  type: sqlite
+
+federation:
+  enabled: true
+  discovery_mode: dns
+
+messaging:
+  default_keep_history: true
+  max_file_size_mb: 10
+  allowed_file_types:
+    - .jpg
+    - .png
+    - .gif
+    - .pdf
+
+rate_limit:
+  enabled: false

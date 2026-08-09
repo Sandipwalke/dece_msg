@@ -20,6 +20,7 @@ pydantic-settings==2.1.0
 
 # Federation
 httpx==0.25.2
+dnspython==2.4.2
 
 # Utils
 python-dotenv==1.0.0

@@ -3,9 +3,16 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 import httpx
 import asyncio
+import socket
+import dns.resolver
+import dns.exception
 from urllib.parse import urlparse
 
 from decemsg.core.config import get_config
+
+
+# DNS SRV record service name for DeceMSG federation
+DECEMSG_SERVICE = "_decemsg._tcp"
 
 
 class ServerInfo(BaseModel):
@@ -54,7 +61,13 @@ class FederationClient:
         self._timeout = 10.0
     
     async def discover_server(self, domain: str) -> Optional[ServerInfo]:
-        """Discover a server using the federation protocol."""
+        """Discover a server using DNS SRV records or .well-known endpoint.
+        
+        Discovery order:
+        1. Check local cache/registry
+        2. Try DNS SRV record lookup (_decemsg._tcp.domain)
+        3. Fall back to .well-known/nodeinfo endpoint
+        """
         config = get_config()
         
         # Don't discover self
@@ -65,13 +78,106 @@ class FederationClient:
         if self.registry.is_server_known(domain):
             return self.registry.get_server(domain)
         
-        # Try to discover via .well-known endpoint
+        # Try DNS SRV record discovery first
+        srv_result = await self._discover_via_srv(domain)
+        if srv_result:
+            return srv_result
+        
+        # Fall back to .well-known endpoint
+        return await self._discover_via_wellknown(domain)
+    
+    async def _discover_via_srv(self, domain: str) -> Optional[ServerInfo]:
+        """Discover server via DNS SRV record lookup.
+        
+        SRV record format: _decemsg._tcp.domain -> priority weight port target
+        """
+        try:
+            # Try to resolve SRV record
+            srv_record = f"{DECEMSG_SERVICE}.{domain}"
+            
+            # Use socket to get SRV records (synchronous, run in executor)
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(
+                None, self._resolve_srv_record, srv_record
+            )
+            
+            if result:
+                target_host, port = result
+                # Build API URL from SRV record
+                if target_host.startswith("http"):
+                    api_url = target_host.rstrip("/")
+                else:
+                    protocol = "https" if port == 443 else "http"
+                    api_url = f"{protocol}://{target_host}"
+                
+                # Verify server with nodeinfo and get details
+                return await self._verify_and_get_info(domain, api_url)
+                
+        except Exception as e:
+            print(f"SRV discovery failed for {domain}: {e}")
+        
+        return None
+    
+    def _resolve_srv_record(self, srv_name: str) -> Optional[tuple]:
+        """Resolve SRV record using dnspython for real DNS SRV lookups.
+        
+        Returns (target, port) tuple or None if not found.
+        """
+        try:
+            # First try actual DNS SRV record lookup
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = 3.0
+            resolver.lifetime = 5.0
+            
+            srv_record = f"{DECEMSG_SERVICE}.{srv_name.replace(f'{DECEMSG_SERVICE}.', '')}"
+            
+            try:
+                answers = resolver.resolve(srv_record, 'SRV')
+                
+                # Get the SRV record with lowest priority
+                best_record = None
+                for rdata in answers:
+                    if best_record is None or rdata.priority < best_record.priority:
+                        best_record = rdata
+                
+                if best_record:
+                    target = str(best_record.target).rstrip('.')
+                    port = best_record.port
+                    return (target, port)
+            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.exception.Timeout):
+                pass  # No SRV record, try fallback
+            
+            # Fallback: Try direct connection to common ports
+            target_domain = srv_name.replace(f"{DECEMSG_SERVICE}.", "")
+            ports_to_try = [443, 8443, 8000, 8080]
+            
+            for port in ports_to_try:
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(2)
+                    result = sock.connect_ex((target_domain, port))
+                    sock.close()
+                    
+                    if result == 0:
+                        return (target_domain, port)
+                except:
+                    continue
+            
+            # Default to HTTPS port
+            return (target_domain, 443)
+            
+        except Exception as e:
+            print(f"SRV resolution error: {e}")
+        
+        return None
+    
+    async def _discover_via_wellknown(self, domain: str) -> Optional[ServerInfo]:
+        """Discover server via .well-known/nodeinfo endpoint."""
         server_url = self._build_server_url(domain)
         nodeinfo_url = f"{server_url}/.well-known/nodeinfo"
         
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
-                # Try nodeinfo first
                 response = await client.get(nodeinfo_url)
                 
                 if response.status_code == 200:
@@ -86,7 +192,31 @@ class FederationClient:
                     return server_info
                     
         except Exception as e:
-            print(f"Discovery failed for {domain}: {e}")
+            print(f"Well-known discovery failed for {domain}: {e}")
+        
+        return None
+    
+    async def _verify_and_get_info(self, domain: str, api_url: str) -> Optional[ServerInfo]:
+        """Verify server exists at API URL and get server info."""
+        nodeinfo_url = f"{api_url}/.well-known/nodeinfo"
+        
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.get(nodeinfo_url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    server_info = ServerInfo(
+                        domain=domain,
+                        name=data.get("name", domain),
+                        version=data.get("version", "unknown"),
+                        api_url=api_url
+                    )
+                    self.registry.add_server(domain, server_info)
+                    return server_info
+                    
+        except Exception as e:
+            print(f"Server verification failed for {domain}: {e}")
         
         return None
     
@@ -230,6 +360,166 @@ class FederationClient:
 
         except Exception as e:
             print(f"Chat sync failed: {e}")
+
+        return False
+    
+    async def sync_group_chat(
+        self,
+        chat_id: str,
+        name: str,
+        members: list[str],
+        created_by: str,
+        domain: str
+    ) -> bool:
+        """Sync group chat with a federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/chats/group/sync",
+                    json={
+                        "chat_id": chat_id,
+                        "name": name,
+                        "members": members,
+                        "created_by": created_by
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Group chat sync failed: {e}")
+
+        return False
+    
+    async def send_message_update(
+        self,
+        message_id: str,
+        chat_id: str,
+        content: str,
+        domain: str
+    ) -> bool:
+        """Send message edit to federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/messages/update",
+                    json={
+                        "message_id": message_id,
+                        "chat_id": chat_id,
+                        "content": content
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Message update failed: {e}")
+
+        return False
+    
+    async def send_message_delete(
+        self,
+        message_id: str,
+        chat_id: str,
+        domain: str
+    ) -> bool:
+        """Send message delete to federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/messages/delete",
+                    json={
+                        "message_id": message_id,
+                        "chat_id": chat_id
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Message delete failed: {e}")
+
+        return False
+    
+    async def send_typing_indicator(
+        self,
+        chat_id: str,
+        user_id: str,
+        is_typing: bool,
+        domain: str
+    ) -> bool:
+        """Send typing indicator to federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/typing",
+                    json={
+                        "chat_id": chat_id,
+                        "user_id": user_id,
+                        "is_typing": is_typing
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Typing indicator failed: {e}")
+
+        return False
+    
+    async def send_profile_update(
+        self,
+        user_id: str,
+        display_name: str,
+        avatar_url: str,
+        domain: str
+    ) -> bool:
+        """Send profile update to federated server."""
+        server_info = await self.discover_server(domain)
+
+        if not server_info:
+            return False
+
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    f"{server_info.api_url}/federation/profile/update",
+                    json={
+                        "user_id": user_id,
+                        "display_name": display_name,
+                        "avatar_url": avatar_url
+                    },
+                    headers={"Content-Type": "application/json"}
+                )
+
+                return response.status_code in (200, 201, 202)
+
+        except Exception as e:
+            print(f"Profile update failed: {e}")
 
         return False
 

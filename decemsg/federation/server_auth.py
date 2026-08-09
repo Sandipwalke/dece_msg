@@ -1,0 +1,296 @@
+"""Server authentication for federation.
+
+This module provides:
+- Server key pair generation and storage
+- Request signing for server-to-server communication
+- Server verification via signatures
+"""
+import os
+import hashlib
+import hmac
+import time
+import json
+import base64
+from typing import Optional, Dict
+from datetime import datetime, timedelta
+from dataclasses import dataclass
+
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.backends import default_backend
+
+
+@dataclass
+class ServerIdentity:
+    """Identity information for a federated server."""
+    domain: str
+    public_key_pem: str
+    signature: Optional[str] = None
+    issued_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    is_verified: bool = False
+
+
+class ServerKeyManager:
+    """Manages server key pairs for authentication."""
+    
+    def __init__(self):
+        self._key_pair: Optional[ec.EllipticCurvePrivateKey] = None
+        self._public_key_pem: Optional[str] = None
+        self._load_or_generate_keys()
+    
+    def _load_or_generate_keys(self):
+        """Load existing keys or generate new ones."""
+        key_file = "./data/server_identity_key.pem"
+        
+        if os.path.exists(key_file):
+            try:
+                with open(key_file, 'rb') as f:
+                    key_data = f.read()
+                self._key_pair = serialization.load_pem_private_key(
+                    key_data,
+                    password=None,
+                    backend=default_backend()
+                )
+                self._public_key_pem = self._key_pair.public_key().public_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PublicFormat.SubjectPublicKeyInfo
+                ).decode()
+                print("Loaded existing server identity keys")
+                return
+            except Exception as e:
+                print(f"Error loading keys, generating new ones: {e}")
+        
+        # Generate new key pair
+        self._key_pair = ec.generate_private_key(ec.SECP256R1(), default_backend())
+        self._public_key_pem = self._key_pair.public_key().public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+        
+        # Save keys
+        os.makedirs("./data", exist_ok=True)
+        private_pem = self._key_pair.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        with open(key_file, 'wb') as f:
+            f.write(private_pem)
+        print("Generated new server identity keys")
+    
+    def get_public_key_pem(self) -> str:
+        """Get the server's public key in PEM format."""
+        return self._public_key_pem
+    
+    def sign_data(self, data: str) -> str:
+        """Sign data with the server's private key.
+        
+        Args:
+            data: String data to sign
+            
+        Returns:
+            Base64 encoded signature
+        """
+        if not self._key_pair:
+            raise ValueError("No key pair available")
+        
+        message = data.encode('utf-8')
+        signature = self._key_pair.sign(message, ec.ECDSA(hashes.SHA256()))
+        
+        # Convert signature to DER format and encode
+        r, s = decode_dss_signature(signature)
+        sig_der = r.to_bytes(32, 'big') + s.to_bytes(32, 'big')
+        return base64.b64encode(sig_der).decode()
+    
+    def verify_signature(self, data: str, signature: str, public_key_pem: str) -> bool:
+        """Verify a signature from another server.
+        
+        Args:
+            data: Original data that was signed
+            signature: Base64 encoded signature
+            public_key_pem: PEM encoded public key
+            
+        Returns:
+            True if signature is valid
+        """
+        try:
+            public_key = serialization.load_pem_public_key(
+                public_key_pem.encode(),
+                backend=default_backend()
+            )
+            
+            sig_bytes = base64.b64decode(signature)
+            
+            # Reconstruct signature in DER format
+            r = int.from_bytes(sig_bytes[:32], 'big')
+            s = int.from_bytes(sig_bytes[32:64], 'big')
+            signature_der = decode_dss_signature((r, s))
+            
+            public_key.verify(signature_der, data.encode('utf-8'), ec.ECDSA(hashes.SHA256()))
+            return True
+        except Exception as e:
+            print(f"Signature verification failed: {e}")
+            return False
+
+
+class ServerRegistry:
+    """Registry of known federated servers with verification status."""
+    
+    def __init__(self):
+        self._servers: Dict[str, ServerIdentity] = {}
+    
+    def register_server(
+        self,
+        domain: str,
+        public_key_pem: str,
+        signature: Optional[str] = None
+    ) -> ServerIdentity:
+        """Register a new federated server.
+        
+        Args:
+            domain: Server domain
+            public_key_pem: Server's public key
+            signature: Optional signature to verify
+            
+        Returns:
+            ServerIdentity object
+        """
+        identity = ServerIdentity(
+            domain=domain,
+            public_key_pem=public_key_pem,
+            signature=signature,
+            issued_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(days=365),
+            is_verified=False
+        )
+        
+        self._servers[domain] = identity
+        return identity
+    
+    def get_server(self, domain: str) -> Optional[ServerIdentity]:
+        """Get server identity."""
+        return self._servers.get(domain)
+    
+    def is_verified(self, domain: str) -> bool:
+        """Check if a server has been verified."""
+        identity = self._servers.get(domain)
+        return identity.is_verified if identity else False
+    
+    def mark_verified(self, domain: str) -> bool:
+        """Mark a server as verified."""
+        if domain in self._servers:
+            self._servers[domain].is_verified = True
+            return True
+        return False
+
+
+def create_authenticated_request(
+    method: str,
+    path: str,
+    body: str,
+    timestamp: Optional[int] = None
+) -> dict:
+    """Create an authenticated request to a federated server.
+    
+    Args:
+        method: HTTP method (GET, POST, etc.)
+        path: Request path
+        body: Request body (empty string for GET)
+        timestamp: Unix timestamp (defaults to current time)
+        
+    Returns:
+        Dict with request headers including authentication
+    """
+    key_manager = get_key_manager()
+    
+    if timestamp is None:
+        timestamp = int(time.time())
+    
+    # Create signature payload
+    payload = f"{method}:{path}:{timestamp}:{hashlib.sha256(body.encode()).hexdigest()}"
+    
+    signature = key_manager.sign_data(payload)
+    
+    return {
+        "X-Server-Signature": signature,
+        "X-Server-Timestamp": str(timestamp),
+        "X-Server-Public-Key": key_manager.get_public_key_pem(),
+        "X-Server-Domain": get_config().server.domain
+    }
+
+
+def verify_authenticated_request(
+    method: str,
+    path: str,
+    body: str,
+    headers: dict,
+    server_domain: Optional[str] = None
+) -> bool:
+    """Verify an authenticated request from a federated server.
+    
+    Args:
+        method: HTTP method
+        path: Request path
+        body: Request body
+        headers: Request headers
+        server_domain: Expected server domain
+        
+    Returns:
+        True if request is authenticated
+    """
+    # Extract headers
+    signature = headers.get("X-Server-Signature")
+    timestamp_str = headers.get("X-Server-Timestamp")
+    public_key = headers.get("X-Server-Public-Key")
+    domain = headers.get("X-Server-Domain")
+    
+    if not all([signature, timestamp_str, public_key]):
+        return False
+    
+    # Verify timestamp is recent (within 5 minutes)
+    try:
+        timestamp = int(timestamp_str)
+        current_time = int(time.time())
+        if abs(current_time - timestamp) > 300:  # 5 minute window
+            return False
+    except ValueError:
+        return False
+    
+    # Verify domain if specified
+    if server_domain and domain != server_domain:
+        return False
+    
+    # Verify signature
+    key_manager = get_key_manager()
+    payload = f"{method}:{path}:{timestamp}:{hashlib.sha256(body.encode()).hexdigest()}"
+    
+    return key_manager.verify_signature(payload, signature, public_key)
+
+
+# Global instances
+_key_manager: Optional[ServerKeyManager] = None
+_server_registry: Optional[ServerRegistry] = None
+
+
+def get_key_manager() -> ServerKeyManager:
+    """Get the global key manager instance."""
+    global _key_manager
+    if _key_manager is None:
+        _key_manager = ServerKeyManager()
+    return _key_manager
+
+
+def get_server_registry() -> ServerRegistry:
+    """Get the global server registry instance."""
+    global _server_registry
+    if _server_registry is None:
+        _server_registry = ServerRegistry()
+    return _server_registry
+
+
+def get_config():
+    """Get config (lazy import to avoid circular deps)."""
+    from decemsg.core.config import get_config
+    return get_config()

@@ -173,7 +173,7 @@ async def create_chat(
         # Check if direct chat already exists
         result = await db.execute(
             select(Chat)
-            .options(selectinload(Chat.members))
+            .options(selectinload(Chat.members).selectinload(ChatMember.user))
             .where(
                 Chat.type == ChatType.DIRECT,
                 Chat.is_active == True
