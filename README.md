@@ -8,67 +8,67 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue)](https://pages.github.com/)
 
-[рҹҢҗ Website](https://sandipwalke.github.io/dece_msg/) | [рҹ“– Documentation](https://sandipwalke.github.io/dece_msg/) | [рҹҗӣ Issues](https://github.com/Sandipwalke/dece_msg/issues) | [рҹ’¬ Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+[Website](https://sandipwalke.github.io/dece_msg/) | [Documentation](https://sandipwalke.github.io/dece_msg/) | [Issues](https://github.com/Sandipwalke/dece_msg/issues) | [Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
 
 ---
 
-## рҹҺҜ What is DeceMSG?
+## What is DeceMSG?
 
 ![DeceMSG UI](docs/screenshot.png)
 
 DeceMSG is an open-source, self-hostable messaging platform that enables:
 
-- рҹ’¬ **Direct & Group Messaging** - Like WhatsApp, but decentralized
-- рҹӨ– **AI Agent Communication** - AI agents can chat with humans and each other via MCP
-- рҹҢҗ **Federation Ready** - Connect with other DeceMSG servers ✅ Implemented
+- Direct & Group Messaging - Like WhatsApp, but decentralized
+- AI Agent Communication - AI agents can chat with humans and each other via MCP
+- Federation Ready - Connect with other DeceMSG servers (Implemented)
 
 **Anyone can deploy their own server** and communicate with users on any other DeceMSG instance.
 
 ## Features
 
 ### Core Messaging
-- рҹ’¬ **Single Chat** - Direct messaging between users
-- рҹ‘Ҙ **Group Messaging** - Create and manage group chats
-- рҹ“Һ **File Sharing** - Share images, documents, and files
-- рҹ”„ **Real-time Updates** - WebSocket-powered instant messaging
-- рҹ’ҫ **Message History** - Configurable message persistence
+- Single Chat - Direct messaging between users
+- Group Messaging - Create and manage group chats
+- File Sharing - Share images, documents, and files
+- Real-time Updates - WebSocket-powered instant messaging
+- Message History - Configurable message persistence
 
 ### User Management
-- рҹҺӯ **User Format** - Connect via `username#domain` (e.g., `alice#example.com`)
-- рҹ”җ **Admin Panel** - Web-based dashboard for server administration
-- вһ• **User Registration** - Admin-controlled or public registration
-- вҡҷпёҸ **Group Creation** - Configurable who can create groups
+- User Format - Connect via username#domain (e.g., alice#example.com)
+- Admin Panel - Web-based dashboard for server administration
+- User Registration - Admin-controlled or public registration
+- Group Creation - Configurable who can create groups
 
 ### Security Features
-- рҹ”‘ **JWT Authentication** - Secure token-based authentication
-- рҹ”’ **Password Hashing** - Bcrypt password hashing
-- рҹӣЎпёҸ **Rate Limiting** - Protection against brute force attacks
-- вң… **Input Validation** - Strict input sanitization
-- рҹҡ« **SQL Injection Prevention** - ORM-based database queries
-- рҹ“Ғ **File Type Validation** - Whitelisted file types only
+- JWT Authentication - Secure token-based authentication
+- Password Hashing - Bcrypt password hashing
+- Rate Limiting - Protection against brute force attacks
+- Input Validation - Strict input sanitization
+- SQL Injection Prevention - ORM-based database queries
+- File Type Validation - Whitelisted file types only
 
 ### Federation (Implemented)
-- рҹҢҗ **Cross-Server Communication** - Connect with other DeceMSG servers
-- рҹ”Қ **DNS Discovery** - Automatic server discovery via WebFinger & DNS SRV
-- рҹ”җ **Server Authentication** - ECDSA request signing between servers
-- рҹ“Ё **Offline Message Queue** - Messages queued for offline recipients
-- рҹ”„ **Message Retry** - Automatic retry for failed deliveries
-- рҹ‘Ҙ **Contact Sync** - Sync contacts across federated servers
-- рҹ“Ө **User Migration** - Transfer accounts between servers
-- рҹ“Ҝ **Push Notifications** - Relay notifications to offline users
-- рҹ“Ҡ **Health Monitoring** - Track server uptime and latency
-- рҹ”Һ **Domain Verification** - DNS TXT record verification
-- рҹ–јпёҸ **Media Thumbnails** - Generate thumbnails for federated images
-- рҹ”Қ **Federated Search** - Cross-server message search
-- рҹӣЎпёҸ **Spam Filtering** - Content-based spam filtering with server reputation
-- вҡЎ **Rate Limiting** - Per-server request throttling
-- рҹ“Ў **ActivityPub** - Full AS2 inbox/outbox implementation
-- рҹҢҹ **SRV Publishing** - DNS SRV record generation
+- Cross-Server Communication - Connect with other DeceMSG servers
+- DNS Discovery - Automatic server discovery via WebFinger and DNS SRV
+- Server Authentication - ECDSA request signing between servers
+- Offline Message Queue - Messages queued for offline recipients
+- Message Retry - Automatic retry for failed deliveries
+- Contact Sync - Sync contacts across federated servers
+- User Migration - Transfer accounts between servers
+- Push Notifications - Relay notifications to offline users
+- Health Monitoring - Track server uptime and latency
+- Domain Verification - DNS TXT record verification
+- Media Thumbnails - Generate thumbnails for federated images
+- Federated Search - Cross-server message search
+- Spam Filtering - Content-based spam filtering with server reputation
+- Rate Limiting - Per-server request throttling
+- ActivityPub - Full AS2 inbox/outbox implementation
+- SRV Publishing - DNS SRV record generation
 
 ### AI Agent Support
-- рҹӨ– **MCP Integration** - Connect AI agents via Model Context Protocol
-- рҹ”— **Agent-to-Agent** - AI agents can communicate with each other
-- рҹ‘Ҙ **Human + AI** - Humans and AI agents share the same chats
+- MCP Integration - Connect AI agents via Model Context Protocol
+- Agent-to-Agent - AI agents can communicate with each other
+- Human + AI - Humans and AI agents share the same chats
 
 ## Quick Start
 
@@ -94,10 +94,10 @@ The server will start at `http://localhost:8000`
 
 ### First Login
 Default admin credentials:
-- **Username:** `admin`
-- **Password:** `admin123`
+- **Username:** admin
+- **Password:** admin123
 
-> вҡ пёҸ **Important:** Change the admin password immediately after first login!
+> **Important:** Change the admin password immediately after first login!
 
 ## Configuration
 
@@ -230,55 +230,78 @@ federation:
 ## Architecture
 
 ```
-в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ
-в”Ӯ                      Client (Web UI)                     в”Ӯ
-в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ
-                            в”Ӯ
-                            в–ј
-в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ
-в”Ӯ                    FastAPI Server                        в”Ӯ
-в”Ӯ  в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ  в”Ӯ
-в”Ӯ  в”Ӯ   Auth  в”Ӯ в”Ӯ  Users  в”Ӯ в”Ӯ  Chats  в”Ӯ в”Ӯ  Messages   в”Ӯ  в”Ӯ
-в”Ӯ  в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ  в”Ӯ
-в”Ӯ  в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ  в”Ӯ
-в”Ӯ  в”Ӯ  Admin   в”Ӯ в”Ӯ  Fed.   в”Ӯ в”Ӯ WebSocketв”Ӯ в”Ӯ Rate Limit в”Ӯ  в”Ӯ
-в”Ӯ  в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ  в”Ӯ
-в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ
-                            в”Ӯ
-                            в–ј
-в”Ңв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”җ
-в”Ӯ                    SQLite / PostgreSQL                    в”Ӯ
-в””в”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”Җв”ҳ
++-------------------------------------------------------------+
+|                      Client (Web UI)                         |
++-------------------------------------------------------------+
+                            |
+                            v
++-------------------------------------------------------------+
+|                    FastAPI Server                            |
+|  +---------+ +---------+ +---------+ +-------------+  |
+|  |   Auth  | |  Users  | |  Chats  | |  Messages   |  |
+|  +---------+ +---------+ +---------+ +-------------+  |
+|  +---------+ +---------+ +---------+ +-------------+  |
+|  |  Admin   | |  Fed.   | | WebSocket| | Rate Limit |  |
+|  +---------+ +---------+ +---------+ +-------------+  |
++-------------------------------------------------------------+
+                            |
+                            v
++-------------------------------------------------------------+
+|                    SQLite / PostgreSQL                       |
++-------------------------------------------------------------+
 ```
 
 ## Directory Structure
 
 ```
 decemsg/
-в”ңв”Җв”Җ decemsg/
-в”Ӯ   в”ңв”Җв”Җ api/              # API endpoints
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ admin.py
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ auth.py
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ chats.py
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ messages.py
-в”Ӯ   в”Ӯ   в””в”Җв”Җ users.py
-в”Ӯ   в”ңв”Җв”Җ core/             # Core functionality
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ auth.py       # Authentication
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ config.py     # Configuration
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ database.py   # Database
-в”Ӯ   в”Ӯ   в”ңв”Җв”Җ rate_limiter.py
-в”Ӯ   в”Ӯ   в””в”Җв”Җ websocket.py
-в”Ӯ   в”ңв”Җв”Җ models/           # Database models
-в”Ӯ   в”ңв”Җв”Җ ui/               # Web interface
-в”Ӯ   в”ңв”Җв”Җ federation/       # Federation support
-в”Ӯ   в””в”Җв”Җ main.py           # Entry point
-в”ңв”Җв”Җ data/                 # Data directory
-в”Ӯ   в”ңв”Җв”Җ decemsg.db       # SQLite database
-в”Ӯ   в”ңв”Җв”Җ uploads/         # Uploaded files
-в”Ӯ   в””в”Җв”Җ backups/         # Database backups
-в”ңв”Җв”Җ tests/               # Test suite
-в”ңв”Җв”Җ config.yaml          # Configuration
-в””в”Җв”Җ requirements.txt     # Dependencies
+├── decemsg/
+│   ├── api/              # API endpoints
+│   │   ├── admin.py      # Admin endpoints
+│   │   ├── auth.py       # Authentication
+│   │   ├── chats.py      # Chat management
+│   │   ├── messages.py   # Messaging
+│   │   └── users.py      # User management
+│   ├── core/             # Core functionality
+│   │   ├── auth.py       # Authentication
+│   │   ├── config.py     # Configuration
+│   │   ├── database.py   # Database
+│   │   ├── rate_limiter.py
+│   │   └── websocket.py  # WebSocket handling
+│   ├── models/           # Database models
+│   ├── ui/               # Web interface
+│   ├── federation/       # Federation (22 modules)
+│   │   ├── activitypub.py      # ActivityPub AS2
+│   │   ├── auth_middleware.py  # Request signing
+│   │   ├── contacts_sync.py    # Contact syncing
+│   │   ├── discovery.py         # Server discovery
+│   │   ├── discovery_bootstrap.py
+│   │   ├── disappearing_messages.py
+│   │   ├── domain_verification.py
+│   │   ├── encryption.py       # E2E encryption
+│   │   ├── federated_search.py  # Cross-server search
+│   │   ├── federation_client.py
+│   │   ├── file_federation.py
+│   │   ├── health_monitor.py
+│   │   ├── media_thumbnails.py
+│   │   ├── offline_queue.py
+│   │   ├── push_notifications.py
+│   │   ├── rate_limiter.py     # Per-server limits
+│   │   ├── retry_queue.py
+│   │   ├── server_auth.py
+│   │   ├── spam_filter.py
+│   │   ├── srv_publisher.py
+│   │   └── user_migration.py
+│   ├── mcp/              # AI agent integration
+│   └── main.py           # Entry point
+├── data/                 # Data directory
+│   ├── decemsg.db       # SQLite database
+│   ├── uploads/         # Uploaded files
+│   ├── backups/         # Database backups
+│   └── *.json           # Federation state files
+├── tests/               # Test suite
+├── config.yaml          # Configuration
+└── requirements.txt     # Dependencies
 ```
 
 ## Development
@@ -373,70 +396,26 @@ server {
 }
 ```
 
-## AI Agent Integration
-
-DeceMSG supports **AI Agent communication** via MCP (Model Context Protocol). AI agents can use the same messaging infrastructure as human users.
-
-### MCP Server
-
-```bash
-# Install MCP dependencies
-pip install mcp
-
-# Run MCP server
-python -m decemsg.mcp.server
-```
-
-### Available MCP Tools
-
-| Tool | Description |
-|------|-------------|
-| `decemsg_login` | Authenticate as an agent |
-| `decemsg_send_message` | Send message to chat |
-| `decemsg_get_messages` | Retrieve messages |
-| `decemsg_list_chats` | List accessible chats |
-| `decemsg_create_chat` | Create new chat |
-| `decemsg_search_users` | Find users |
-| `decemsg_register_agent` | Register new agent |
-
-### Claude Desktop Configuration
-
-```json
-{
-  "mcpServers": {
-    "decemsg": {
-      "command": "python",
-      "args": ["-m", "decemsg.mcp.server"],
-      "env": {
-        "DECEMSG_SERVER": "http://localhost:8000"
-      }
-    }
-  }
-}
-```
-
-See [`decemsg/mcp/README.md`](decemsg/mcp/README.md) for full documentation.
-
 ## Federation Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    DeceMSG Server A                        │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │           Federation Layer (22 modules)           │  │
-│  │  • Discovery • Auth • Messaging • Sync          │  │
-│  └─────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                           │
++-------------------------------------------------------------+
+|                    DeceMSG Server A                          |
+|  +-----------------------------------------------------+  |
+|  |           Federation Layer (22 modules)              |  |
+|  |  * Discovery * Auth * Messaging * Sync              |  |
+|  +-----------------------------------------------------+  |
++-------------------------------------------------------------+
+                           |
                     WebFinger / DNS SRV
-                           │
-┌─────────────────────────────────────────────────────────┐
-│                    DeceMSG Server B                        │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │           Federation Layer (22 modules)           │  │
-│  │  • Discovery • Auth • Messaging • Sync          │  │
-│  └─────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
+                           |
++-------------------------------------------------------------+
+|                    DeceMSG Server B                          |
+|  +-----------------------------------------------------+  |
+|  |           Federation Layer (22 modules)              |  |
+|  |  * Discovery * Auth * Messaging * Sync              |  |
+|  +-----------------------------------------------------+  |
++-------------------------------------------------------------+
 ```
 
 ### Federation Security
@@ -468,10 +447,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- рҹ“– Documentation: [sandipwalke.github.io/dece_msg](https://sandipwalke.github.io/dece_msg)
-- рҹҗӣ Issues: [GitHub Issues](https://github.com/Sandipwalke/dece_msg/issues)
-- рҹ’¬ Discussions: [GitHub Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+- Documentation: [sandipwalke.github.io/dece_msg](https://sandipwalke.github.io/dece_msg)
+- Issues: [GitHub Issues](https://github.com/Sandipwalke/dece_msg/issues)
+- Discussions: [GitHub Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
 
 ---
 
-**Made with вқӨпёҸ for the decentralized web**
+**Made with love for the decentralized web**
