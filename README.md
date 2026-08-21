@@ -2,13 +2,13 @@
 
 **Decentralized Messaging Platform** - A self-hostable, WhatsApp-like messaging server with AI agent support and federation.
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Sandipwalke/dece_msg)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-orange)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Deploy](https://img.shields.io/badge/Deploy-GitHub%20Pages-blue)](https://pages.github.com/)
 
-[Website](https://sandipwalke.github.io/dece_msg/) | [Documentation](https://sandipwalke.github.io/dece_msg/) | [Issues](https://github.com/Sandipwalke/dece_msg/issues) | [Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+[Website](https://decentralised-messaging.github.io/DeceMSG-Decentralised-Messaging/) | [Documentation](https://decentralised-messaging.github.io/DeceMSG-Decentralised-Messaging/) | [Issues](https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging/issues) | [Discussions](https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging/discussions)
 
 ---
 
@@ -80,7 +80,7 @@ DeceMSG is an open-source, self-hostable messaging platform that enables:
 
 ```bash
 # Clone the repository
-git clone https://github.com/Sandipwalke/dece_msg.git
+git clone https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging.git
 cd decemsg
 
 # Install dependencies
@@ -447,9 +447,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- Documentation: [sandipwalke.github.io/dece_msg](https://sandipwalke.github.io/dece_msg)
-- Issues: [GitHub Issues](https://github.com/Sandipwalke/dece_msg/issues)
-- Discussions: [GitHub Discussions](https://github.com/Sandipwalke/dece_msg/discussions)
+- Documentation: [decentralised-messaging.github.io/DeceMSG-Decentralised-Messaging](https://decentralised-messaging.github.io/DeceMSG-Decentralised-Messaging/)
+- Issues: [GitHub Issues](https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging/issues)
+- Discussions: [GitHub Discussions](https://github.com/Decentralised-Messaging/DeceMSG-Decentralised-Messaging/discussions)
 
 ---
 
